@@ -50,6 +50,7 @@ const branchCache=createBranchCache<Branch[]>(root=>api<Branch[]>({op:'branches'
 let branches: Branch[] = [], dialog: Dialog | null = null, branchFilter = '', selectedOids = new Set<string>(), anchor = 0, logAll = true, logFilter = '', menu = false;
 let previousFocus: HTMLElement | null = null;
 let diffObserver:ResizeObserver|undefined;
+let releaseDiffScroll:(()=>void)|undefined;
 let recoveryRef = "";
 let updateMenu = false;
 let menuPoint={x:0,y:0};
@@ -67,6 +68,7 @@ const api = <T>(request: object) => invoke<T>('request', { request });
 const basename = (p: string) => p.split('/').at(-1) ?? p;
 function date(ts: number) { return new Date(ts * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }); }
 function render() {
+  releaseDiffScroll?.();releaseDiffScroll=undefined;
   const active = document.activeElement as HTMLInputElement | HTMLTextAreaElement | null;
   const focusId = active?.id, start = active?.selectionStart, end = active?.selectionEnd;
   const scroll = app.querySelector('.diff-content')?.scrollTop ?? 0;
@@ -118,7 +120,7 @@ function sizeDiffColumns(){
     viewport.querySelectorAll<HTMLElement>(`.code-cell:nth-child(${index+1}) code`).forEach(code=>width=Math.max(width,code.scrollWidth+46));
     (track.firstElementChild as HTMLElement).style.width=`${width}px`;
   });
-  bindSplitDiffScroll(viewport,[...tracks]);
+  releaseDiffScroll=bindSplitDiffScroll(viewport,[...tracks]);
 }
 function changedLines(repo:Repo){
   const stats=repo.lineStats;

@@ -276,3 +276,43 @@ fn implicit_push_does_not_invent_a_remote_or_destination() {
 
 #[path = "push_tests.rs"]
 mod push_tests;
+
+#[test]
+fn absolute_pr_body_file_is_visible_after_runtime_guards() {
+    let root = repository();
+    let files = tempfile::tempdir().unwrap();
+    let body = files.path().join("pull request.md");
+    fs::write(&body, "## Summary\n\nA clear **description**.\n").unwrap();
+    let script = format!("test \"$(git branch --show-current)\" = main && git diff --cached --check && gh pr create --base main --head feature --title 'Fix preview' --body-file '{}'", body.display());
+    let details = inspect(root.path(), &[shell(&script)]).unwrap();
+    let pr = details.iter().find(|detail| detail.kind == "pr.create").unwrap();
+    assert_eq!(pr.body.as_deref(), Some("## Summary\n\nA clear **description**.\n"));
+    assert!(pr.warnings.iter().any(|warning| warning.contains("snapshot")));
+}
+
+#[test]
+fn pr_body_file_options_read_only_bounded_regular_utf8_snapshots() {
+    let root = repository();
+    let files = tempfile::tempdir().unwrap();
+    let body = files.path().join("body.md");
+    let link = files.path().join("linked.md");
+    fs::write(&body, "## Description\n").unwrap();
+    std::os::unix::fs::symlink(&body, &link).unwrap();
+    for option in [format!("--body-file '{}'", body.display()), format!("--body-file='{}'", body.display()), format!("-F '{}'", body.display())] {
+        let details = inspect(root.path(), &[shell(&format!("gh pr create --title Title {option}"))]).unwrap();
+        assert_eq!(details[0].body.as_deref(), Some("## Description\n"));
+    }
+    for path in [&link, &files.path().join("missing.md")] {
+        assert!(message_file::read_body(None, path.to_str().unwrap()).is_err());
+    }
+    fs::write(&body, vec![b'x'; 64_001]).unwrap();
+    assert!(message_file::read_body(None, body.to_str().unwrap()).is_err());
+    fs::write(&body, [0xff, 0xfe]).unwrap();
+    assert!(message_file::read_body(None, body.to_str().unwrap()).is_err());
+    assert!(message_file::read_body(None, "relative.md").is_err());
+    assert!(message_file::read_body(None, "-").is_err());
+    fs::remove_file(&body).unwrap();
+    let path = std::ffi::CString::new(body.to_str().unwrap()).unwrap();
+    assert_eq!(unsafe { libc::mkfifo(path.as_ptr(), 0o600) }, 0);
+    assert!(message_file::read_body(None, body.to_str().unwrap()).is_err());
+}

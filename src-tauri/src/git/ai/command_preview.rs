@@ -12,8 +12,9 @@ pub(super) fn command_preview(root: &Path, steps: &[Step]) -> Result<Preview, St
         code: "unverified_commands".into(), title: "Approve exact commands".into(),
         detail: "These commands run with your account's permissions. They may change files, history, GitHub settings, or other repositories and may invoke configured hooks, aliases, extensions, and helpers. Branchline checks process outcomes, not their complete effects. Review every argument and input.".into(),
     }];
-    let literal_sequence = commands.iter().all(|step| command_details::literal_commands(step).is_some());
-    let arguments = commands.iter().flat_map(command_details::argument_commands).collect::<Vec<_>>();
+    let analyses = commands.iter().map(command_details::analyze).collect::<Vec<_>>();
+    let literal_sequence = analyses.iter().all(|analysis| analysis.literal_sequence);
+    let arguments = analyses.iter().flat_map(command_details::argument_commands).collect::<Vec<_>>();
     let pushes = arguments.iter().filter(|words| words.first().is_some_and(|p| p == "git") && words.get(1).is_some_and(|p| p == "push")).collect::<Vec<_>>();
     if pushes.iter().any(|words| words.iter().skip(2).any(|arg| {
         let destination = arg.rsplit(':').next().unwrap_or(arg).trim_start_matches('+').trim_start_matches("refs/heads/");
@@ -58,7 +59,7 @@ pub(super) fn command_preview(root: &Path, steps: &[Step]) -> Result<Preview, St
         staged_token: String::new(), patch: String::new(), files: Vec::new(),
         warnings: vec!["The whole command runs unchanged after approval. Shell operators retain their normal behavior. Branchline records the process outcome without independently verifying every effect. Commands may access resources outside this repository. Arguments and input are stored in the private local activity record; output is withheld because it may contain secrets. Interactive commands need noninteractive arguments or standard input.".into()],
         risks, push: None, pull_request: None, fingerprint: String::new(), command_workflow: Some(manifest),
-        command_details: command_details::inspect(root, &commands).unwrap_or_default(),
+        command_details: command_details::inspect_analyzed(root, &analyses).unwrap_or_default(),
     };
     preview.fingerprint = format!("{:x}", Sha256::digest(serde_json::to_vec(&preview).map_err(|e| e.to_string())?));
     Ok(preview)
@@ -89,5 +90,25 @@ mod recovery_tests {
         assert!(preview.risks.iter().any(|risk| risk.code == "primary_branch_argument"));
         assert!(preview.command_details.iter().any(|detail| detail.message.as_deref() == Some("Release")));
         assert!(!inspect("test \"$(printf '%s' 'git push origin main')\" = expected && git push origin feat/test").risks.iter().any(|risk| risk.code == "primary_branch_argument"));
+    }
+}
+
+#[cfg(test)]
+mod consistency_tests {
+    use super::*;
+
+    #[test]
+    fn guarded_release_previews_have_identical_cards_risks_and_fingerprints() {
+        let root = tempfile::tempdir().unwrap();
+        assert!(std::process::Command::new("git").args(["init", "-q", "-b", "main"]).current_dir(root.path()).status().unwrap().success());
+        let script = include_str!("command_details/fixtures/guarded-release.txt");
+        let steps = [Step::Command { program: "shell".into(), argv: vec!["-c".into(), script.into()], stdin: None, timeout_seconds: None }];
+        let first = command_preview(root.path(), &steps).unwrap();
+        assert!(first.risks.iter().any(|risk| risk.code == "primary_branch_argument"));
+        for _ in 0..8 {
+            let next = command_preview(root.path(), &steps).unwrap();
+            assert_eq!(first.fingerprint, next.fingerprint);
+            assert_eq!(serde_json::to_value(&first).unwrap(), serde_json::to_value(&next).unwrap());
+        }
     }
 }

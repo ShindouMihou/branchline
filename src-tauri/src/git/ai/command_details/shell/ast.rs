@@ -1,8 +1,14 @@
 use super::wrappers;
-use std::time::{Duration, Instant};
 use tree_sitter::{Node, ParseOptions, ParseState, Parser};
 
 type Fragment = Result<Vec<String>, String>;
+#[derive(Default)]
+struct Budget {
+    parse_checks: usize,
+    nodes: usize,
+    arguments: usize,
+}
+
 const UNCERTAIN: &str = "This expression changes command context or control flow. Later literal arguments are shown as possible actions, not verified execution.";
 
 fn literal(node: Node<'_>, script: &str) -> Result<String, String> {
@@ -19,7 +25,7 @@ fn command(
     script: &str,
     fragments: &mut Vec<Fragment>,
     depth: usize,
-    deadline: Instant,
+    budget: &mut Budget,
 ) -> Result<(), String> {
     let name = node
         .child_by_field_name("name")
@@ -45,8 +51,9 @@ fn command(
             scoped = true;
             continue;
         }
-        if Instant::now() >= deadline {
-            return Err("Shell preview exceeded its time limit.".into());
+        budget.arguments += 1;
+        if budget.arguments > 16_384 {
+            return Err("Shell arguments exceed the static preview limit.".into());
         }
         words.push(match literal(child, script) {
             Ok(value) => value,
@@ -65,7 +72,7 @@ fn command(
         && words[1] == "-c"
     {
         fragments.push(Err(UNCERTAIN.into()));
-        fragments.extend(parse(&words[2], depth + 1, deadline)?);
+        fragments.extend(parse(&words[2], depth + 1, budget)?);
         fragments.push(Err(UNCERTAIN.into()));
     } else {
         fragments.push(Ok(words));
@@ -78,11 +85,10 @@ fn visit(
     script: &str,
     fragments: &mut Vec<Fragment>,
     depth: usize,
-    visited: &mut usize,
-    deadline: Instant,
+    budget: &mut Budget,
 ) -> Result<(), String> {
-    *visited += 1;
-    if Instant::now() >= deadline || depth > 48 || *visited > 8192 || fragments.len() > 2048 {
+    budget.nodes += 1;
+    if depth > 48 || budget.nodes > 8192 || fragments.len() > 2048 {
         return Err(
             "The shell structure exceeds the static preview limit. Review the exact command."
                 .into(),
@@ -91,7 +97,7 @@ fn visit(
     match node.kind() {
         "comment" => {}
         "command" => {
-            if let Err(error) = command(node, script, fragments, depth, deadline) {
+            if let Err(error) = command(node, script, fragments, depth, budget) {
                 fragments.push(Err(error));
             }
         }
@@ -105,7 +111,7 @@ fn visit(
                 if uncertain {
                     fragments.push(Err(UNCERTAIN.into()));
                 }
-                visit(child, script, fragments, depth + 1, visited, deadline)?;
+                visit(child, script, fragments, depth + 1, budget)?;
             }
             if uncertain {
                 fragments.push(Err(UNCERTAIN.into()));
@@ -114,7 +120,7 @@ fn visit(
         "redirected_statement" => {
             fragments.push(Err(UNCERTAIN.into()));
             if let Some(body) = node.child_by_field_name("body") {
-                visit(body, script, fragments, depth + 1, visited, deadline)?;
+                visit(body, script, fragments, depth + 1, budget)?;
             }
         }
         "pipeline"
@@ -133,7 +139,7 @@ fn visit(
             let mut cursor = node.walk();
             for child in node.named_children(&mut cursor) {
                 fragments.push(Err(UNCERTAIN.into()));
-                visit(child, script, fragments, depth + 1, visited, deadline)?;
+                visit(child, script, fragments, depth + 1, budget)?;
             }
             fragments.push(Err(UNCERTAIN.into()));
         }
@@ -145,7 +151,7 @@ fn visit(
     Ok(())
 }
 
-fn parse(script: &str, depth: usize, deadline: Instant) -> Result<Vec<Fragment>, String> {
+fn parse(script: &str, depth: usize, budget: &mut Budget) -> Result<Vec<Fragment>, String> {
     if script.len() > 131_072 || depth > 48 {
         return Err("The shell text exceeds the static preview limit.".into());
     }
@@ -153,14 +159,18 @@ fn parse(script: &str, depth: usize, deadline: Instant) -> Result<Vec<Fragment>,
     parser
         .set_language(&tree_sitter_bash::LANGUAGE.into())
         .map_err(|_| "The shell parser is unavailable.")?;
-    let mut progress = |_: &ParseState| Instant::now() >= deadline;
+    let mut progress = |_: &ParseState| {
+        budget.parse_checks += 1;
+        budget.parse_checks > 4096
+    };
     let tree = parser
         .parse_with_options(
             &mut |offset, _| &script.as_bytes()[offset..],
             None,
             Some(ParseOptions::new().progress_callback(&mut progress)),
         )
-        .ok_or("Shell parsing exceeded the preview time limit.")?;
+        .ok_or("Shell parsing exceeded the static work limit.")?;
+    drop(progress);
     if tree.root_node().has_error() {
         return Err("The shell syntax could not be parsed completely. Review the exact command; no partial syntax is treated as reliable.".into());
     }
@@ -170,12 +180,25 @@ fn parse(script: &str, depth: usize, deadline: Instant) -> Result<Vec<Fragment>,
         script,
         &mut fragments,
         depth,
-        &mut 0,
-        deadline,
+        budget,
     )?;
     Ok(fragments)
 }
 
 pub(super) fn preview(script: &str) -> Result<Vec<Fragment>, String> {
-    parse(script, 0, Instant::now() + Duration::from_millis(100))
+    parse(script, 0, &mut Budget::default())
+}
+
+#[cfg(test)]
+mod scheduling_tests {
+    use super::*;
+
+    #[test]
+    fn scheduling_delay_does_not_change_literal_push_detection() {
+        let script = "test \"$(git rev-parse HEAD)\" = expected && git push --atomic origin main";
+        let mut budget = Budget::default();
+        std::thread::sleep(std::time::Duration::from_millis(110));
+        let delayed = parse(script, 0, &mut budget);
+        assert_eq!(delayed, preview(script));
+    }
 }

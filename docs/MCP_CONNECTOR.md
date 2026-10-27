@@ -132,3 +132,9 @@ Execution waits for the approved shell process. A successful exit does not prove
 The Activity tab includes a native-only Clear activity action with confirmation. It deletes finished and blocked request records across connections, including their local approval/command receipts. Prepared, pending-review, approved and running requests remain. Git changes, connection credentials and previously exported files are unchanged. Cleared request IDs can no longer be inspected or waited on; reusing an old idempotency key creates a new request requiring a new native approval. No MCP tool can clear this activity.
 
 Needs you lists only requests pending an approval decision. Blocked, stopped, finished, prepared and running requests appear in Activity; historical blocked plans need a new AI request rather than a manual approval.
+
+### Preview changes and file-backed PR descriptions
+
+Command warnings and action cards share one bounded shell analysis. Preview parsing uses deterministic work limits, so system load does not decide which actions appear. Approval still rechecks the preview. If it differs, Branchline lists what changed (such as a warning, branch, file selection, or PR description) in the stopped request and activity record. Nothing executes; the AI must submit a fresh request.
+
+`gh pr create --body-file PATH` and `-F PATH` display the current Markdown description from a regular UTF-8 file up to 64 KB. Absolute paths, including temporary files outside the repository, can be previewed after runtime guards. Relative paths require a known repository context. Missing, symbolic-link, special, oversized, or non-UTF-8 files produce an explanation instead. Standard-input and runtime-generated descriptions are not inferred. The body is a current snapshot: earlier commands or later edits can change what GitHub CLI eventually reads. Changes detected at approval require review again; commands still run unchanged.

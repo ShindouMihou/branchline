@@ -2,6 +2,7 @@
 pub mod mcp;
 mod wait;
 mod review_signals;
+mod preview_changes;
 mod output;
 use crate::git::{
     self,
@@ -857,15 +858,13 @@ impl Broker {
                     }
                 };
                 if current.fingerprint != p.preview.as_ref().unwrap().fingerprint {
+                    let reason = preview_changes::explain(p.preview.as_ref().unwrap(), &current);
                     let p = b.plan_mut(&plan_id)?;
                     p.status = "needs_review".into();
-                    p.issue=Some("The repository changed after this preview. Ask the AI for a new plan so you can review the actual changes.".into());
-                    p.event(
-                        "stale",
-                        "Approval refused because the verified effects changed.",
-                    );
+                    p.issue = Some(reason.clone());
+                    p.event("stale", &reason);
                     b.save()?;
-                    return Err("The repository changed. This plan was not approved.".into());
+                    return Err(reason);
                 }
                 let p = b.plan_mut(&plan_id)?;
                 p.approval = Some(Approval {

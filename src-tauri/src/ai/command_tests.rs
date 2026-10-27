@@ -218,3 +218,54 @@ fn native_alert_dispatch_preserves_each_new_review_and_independent_preferences()
     assert_eq!(policy["notifications"], false);
     assert!(broker.lock().unwrap().journal.plans.iter().all(|plan| plan.approval.is_none() && plan.execution.iter().all(|step| step.commands.is_empty())));
 }
+
+#[test]
+fn changed_risk_explains_the_warning_without_claiming_repository_changed() {
+    let (_dir, broker, credential, _repo) = fixture();
+    let mut plan = propose(&broker, &credential, "risk-change", &[&["push", "origin", "main"]]);
+    {
+        let mut state = broker.lock().unwrap();
+        let saved = state.plan_mut(plan["id"].as_str().unwrap()).unwrap();
+        let preview = saved.preview.as_mut().unwrap();
+        preview.risks.retain(|risk| risk.code != "primary_branch_argument");
+        preview.fingerprint = "previous-preview".into();
+        plan = serde_json::to_value(saved).unwrap();
+    }
+    let error = Broker::native(&broker, approval(&plan, 1, true, true)).unwrap_err();
+    assert!(error.contains("Pushing to a primary branch"), "{error}");
+    assert!(!error.contains("repository changed"), "{error}");
+    let saved = broker.lock().unwrap().journal.plans[0].clone();
+    assert_eq!(saved.status, "needs_review");
+    assert!(saved.approval.is_none());
+    assert!(saved.execution[0].commands.is_empty());
+    assert!(saved.events.last().unwrap().detail.contains("Pushing to a primary branch"));
+}
+
+#[test]
+fn branch_changes_are_explained_and_never_execute_the_old_request() {
+    let (_dir, broker, credential, repo) = fixture();
+    let plan = propose(&broker, &credential, "branch-change", &[&["add", "--", "first.txt"]]);
+    git(&repo, &["symbolic-ref", "HEAD", "refs/heads/feature"]);
+    let error = Broker::native(&broker, approval(&plan, 1, true, true)).unwrap_err();
+    assert!(error.contains("main → feature"), "{error}");
+    assert!(error.contains("No command ran"));
+    assert!(git(&repo, &["diff", "--cached", "--name-only"]).is_empty());
+}
+
+#[test]
+fn pr_body_file_changes_are_explained_before_execution() {
+    let (_dir, broker, credential, repo) = fixture();
+    let body = repo.join("body.md");
+    fs::write(&body, "Original body").unwrap();
+    let args = json!({"schemaVersion":1,"idempotencyKey":"body-change","explanation":{"summary":"Open a PR","reason":"Review the body","impact":"Open a PR after approval","uncertainties":[]},"steps":[{"kind":"command.execute","program":"shell","argv":["-c",format!("test \"$(git branch --show-current)\" = main && gh pr create --title Title --body-file '{}'",body.display())]}]});
+    let plan = broker.lock().unwrap().tool(&credential, "branchline_propose_plan", args).unwrap();
+    broker.lock().unwrap().tool(&credential, "branchline_request_review", json!({"planId":plan["id"]})).unwrap();
+    fs::write(&body, "A revised body with more detail").unwrap();
+    let error = Broker::native(&broker, approval(&plan, 1, true, true)).unwrap_err();
+    assert!(error.contains("Pull request description"), "{error}");
+    assert!(error.contains("13 → 31 characters"), "{error}");
+    assert!(!error.contains("Original body"));
+    let saved = broker.lock().unwrap().journal.plans[0].clone();
+    assert!(saved.approval.is_none());
+    assert!(saved.execution[0].commands.is_empty());
+}

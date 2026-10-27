@@ -6,62 +6,18 @@ mod literal;
 mod shell;
 mod staging;
 mod types;
+mod message_file;
+use message_file::read_text;
 use super::commands::CommandStep;
 use staging::stage;
-use std::{
-    fs,
-    io::Read,
-    os::unix::fs::{MetadataExt, OpenOptionsExt},
-    path::Path,
-};
+use std::path::Path;
+#[cfg(test)]
+use std::fs;
 pub use types::{Detail, FileSelection, FileSource};
 
 fn read_git(root: &Path, args: &[&str]) -> Option<String> {
     let (code, out, _) = super::super::git(root, args, None).ok()?;
     (code == 0).then(|| String::from_utf8(out).ok()).flatten()
-}
-
-fn read_text(root: Option<&Path>, value: &str) -> Result<String, String> {
-    let root = root.ok_or("File contents are not read after a directory or configuration change; review the file at execution time.")?;
-    if value == "-" {
-        return Err("The message is read from stdin when this command runs.".into());
-    }
-    let root = fs::canonicalize(root)
-        .map_err(|_| "Cannot identify the repository for the message preview.")?;
-    let requested = root.join(value);
-    let metadata = fs::symlink_metadata(&requested)
-        .map_err(|_| "The message file is not currently readable.")?;
-    let path =
-        fs::canonicalize(&requested).map_err(|_| "The message file is not currently readable.")?;
-    if !path.starts_with(&root)
-        || !metadata.is_file()
-        || metadata.file_type().is_symlink()
-        || metadata.len() > 64_000
-    {
-        return Err(
-            "File contents are previewed only for repository-local regular files up to 64 KB."
-                .into(),
-        );
-    }
-    let file = fs::OpenOptions::new()
-        .read(true)
-        .custom_flags(libc::O_NOFOLLOW)
-        .open(path)
-        .map_err(|_| "The message file changed or cannot be opened safely.")?;
-    let opened = file
-        .metadata()
-        .map_err(|_| "Cannot identify the opened message file.")?;
-    if metadata.dev() != opened.dev() || metadata.ino() != opened.ino() || !opened.is_file() {
-        return Err("The message file changed during preview.".into());
-    }
-    let mut bytes = Vec::new();
-    file.take(64_001)
-        .read_to_end(&mut bytes)
-        .map_err(|_| "Cannot read the message file.")?;
-    if bytes.len() > 64_000 {
-        return Err("The message file exceeds the preview limit.".into());
-    }
-    String::from_utf8(bytes).map_err(|_| "The message file is not UTF-8 text.".into())
 }
 
 fn flag(
@@ -313,8 +269,11 @@ fn pull_request(root: Option<&Path>, args: &[String], command_index: usize, stat
                         1 => detail.body = Some(value),
                         2 => detail.base_branch = Some(value),
                         3 => detail.head_branch = Some(value),
-                        _ => match read_text(root, &value) {
-                            Ok(text) => detail.body = Some(text),
+                        _ => match message_file::read_body(root, &value) {
+                            Ok(text) => {
+                                detail.body = Some(text);
+                                detail.warnings.push("The description is a current file snapshot, not a frozen execution input. Earlier commands or later edits may change what GitHub CLI reads.".into());
+                            },
                             Err(error) => detail.warnings.push(error),
                         },
                     },
@@ -349,7 +308,27 @@ fn pull_request(root: Option<&Path>, args: &[String], command_index: usize, stat
     detail
 }
 
+pub(super) struct Analysis {
+    fragments: Result<Vec<Result<Vec<String>, String>>, String>,
+    pub literal_sequence: bool,
+}
+
+pub(super) fn analyze(step: &CommandStep) -> Analysis {
+    let fragments = if step.program == "shell" {
+        step.argv.get(1).ok_or_else(|| "Shell text is missing.".to_string())
+            .and_then(|script| shell::preview(script))
+    } else {
+        Ok(vec![Ok(std::iter::once(step.program.clone()).chain(step.argv.clone()).collect())])
+    };
+    Analysis { fragments, literal_sequence: literal_commands(step).is_some() }
+}
+
+#[cfg(test)]
 pub fn inspect(root: &Path, steps: &[CommandStep]) -> Result<Vec<Detail>, String> {
+    inspect_analyzed(root, &steps.iter().map(analyze).collect::<Vec<_>>())
+}
+
+pub(super) fn inspect_analyzed(root: &Path, analyses: &[Analysis]) -> Result<Vec<Detail>, String> {
     let branch = read_git(root, &["symbolic-ref", "--quiet", "--short", "HEAD"])
         .map(|s| s.trim().to_string());
     let staged = read_git(
@@ -378,29 +357,18 @@ pub fn inspect(root: &Path, steps: &[CommandStep]) -> Result<Vec<Detail>, String
         previous: false,
     };
     let mut details = Vec::new();
-    for (command_index, step) in steps.iter().enumerate() {
+    for (command_index, analysis) in analyses.iter().enumerate() {
         let mut context_uncertain = false;
         let mut literal_only = false;
         let mut requested_directory = None;
-        let commands = if step.program == "shell" {
-            match step
-                .argv
-                .get(1)
-                .ok_or_else(|| "Shell text is missing.".to_string())
-                .and_then(|script| shell::preview(script))
-            {
-                Ok(commands) => commands,
-                Err(error) => {
-                    details.push(Detail::unavailable(command_index, &error));
-                    state.branch = None;
-                    state.index_uncertain = true;
-                    continue;
-                }
+        let commands = match analysis.fragments.clone() {
+            Ok(commands) => commands,
+            Err(error) => {
+                details.push(Detail::unavailable(command_index, &error));
+                state.branch = None;
+                state.index_uncertain = true;
+                continue;
             }
-        } else {
-            vec![Ok(std::iter::once(step.program.clone())
-                .chain(step.argv.clone())
-                .collect())]
         };
         for words in commands {
             let words = match words {
@@ -529,14 +497,10 @@ pub fn inspect(root: &Path, steps: &[CommandStep]) -> Result<Vec<Detail>, String
 #[cfg(test)]
 mod tests;
 
-pub(super) fn argument_commands(step: &CommandStep) -> Vec<Vec<String>> {
-    let commands = if step.program == "shell" {
-        step.argv.get(1).and_then(|script| shell::preview(script).ok())
-            .unwrap_or_default().into_iter().filter_map(Result::ok).collect()
-    } else {
-        literal_commands(step).unwrap_or_default()
-    };
-    commands.into_iter().map(literal::normalize_arguments).collect()
+pub(super) fn argument_commands(analysis: &Analysis) -> Vec<Vec<String>> {
+    analysis.fragments.as_ref().ok().into_iter().flatten()
+        .filter_map(|entry| entry.as_ref().ok()).cloned()
+        .map(literal::normalize_arguments).collect()
 }
 
 pub(super) fn literal_commands(step: &CommandStep) -> Option<Vec<Vec<String>>> {
