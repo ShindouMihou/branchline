@@ -13,6 +13,15 @@ export interface AiCommandDetail {
   headBranch?: string;
   pullRequestTitle?: string;
   body?: string;
+  workingDirectory?: string;
+  repository?: string;
+  visibility?: string;
+  sourceDirectory?: string;
+  topics?: string[];
+  tag?: string;
+  releaseTitle?: string;
+  assets?: string[];
+  notesFile?: string;
   warnings: string[];
   evidence: string;
 }

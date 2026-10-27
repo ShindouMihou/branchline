@@ -9,6 +9,7 @@
     "build": "tsc && vite build",
     "tauri": "node scripts/tauri.mjs",
     "test": "vitest run",
+    "test:installer": "node --test tests/install-check.mjs",
     "desktop": "node scripts/tauri.mjs dev"
   },
   "dependencies": {

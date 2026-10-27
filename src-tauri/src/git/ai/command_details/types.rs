@@ -26,6 +26,24 @@ pub struct Detail {
     pub pull_request_title: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub body: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub working_directory: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub repository: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub visibility: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_directory: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub topics: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tag: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub release_title: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub assets: Option<Vec<String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub notes_file: Option<String>,
     pub warnings: Vec<String>,
     pub evidence: String,
     #[serde(default)]
@@ -62,6 +80,15 @@ impl Detail {
             head_branch: None,
             pull_request_title: None,
             body: None,
+            working_directory: None,
+            repository: None,
+            visibility: None,
+            source_directory: None,
+            topics: None,
+            tag: None,
+            release_title: None,
+            assets: None,
+            notes_file: None,
             warnings: Vec::new(),
             evidence: "Literal command arguments; effects are not verified.".into(),
             evidence_kind: "command".into(),

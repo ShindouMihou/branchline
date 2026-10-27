@@ -71,6 +71,25 @@ Command output is withheld from durable receipts because it may contain secrets.
 - **Make room for the task.** Resize or collapse the files, log, and diff panels. Open repositories in separate windows. Adjust interface text, code size, spacing, and contrast.
 - **Keep the view current.** Local repository changes refresh automatically, with selection and scrolling preserved. Automatic refresh does not fetch or pull.
 
+## Install on macOS
+
+On an **Apple Silicon Mac running macOS 12 or later**:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/ShindouMihou/branchline/main/scripts/install.sh | bash
+```
+
+The installer downloads the latest [GitHub release](https://github.com/ShindouMihou/branchline/releases/latest), verifies its SHA-256 checksum, checks the app bundle identity and signature, and installs to `~/Applications/Branchline.app`. It requires no `sudo` and preserves an existing copy if replacement fails. Quit the Branchline GUI before updating.
+
+Prefer to inspect the script first? [Read the installer](scripts/install.sh), or download the app archive and checksum from [Releases](https://github.com/ShindouMihou/branchline/releases). The current preview is ad-hoc signed and **not notarized**. The installer does not remove quarantine attributes or bypass macOS security policy.
+
+Optional settings:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/ShindouMihou/branchline/main/scripts/install.sh | \
+  BRANCHLINE_VERSION=v0.4.0 BRANCHLINE_INSTALL_DIR="$HOME/Applications" bash
+```
+
 ## Run locally
 
 Branchline is in active development. **Apple Silicon macOS is the currently packaged and tested target.** Windows and Linux builds have not been verified. Locally generated macOS bundles are ad-hoc signed and are not notarized.
@@ -97,10 +116,11 @@ The bundle is written to `src-tauri/target/release/bundle/macos/Branchline.app`.
 ```sh
 npm test
 npm run build
+npm run test:installer
 cargo test --manifest-path src-tauri/Cargo.toml
 ```
 
-The current suite has **140 Rust tests and 46 frontend tests**. Additional blind testing covers command execution, structured previews, approval ownership, denial, timeouts, cancellation, and result integrity. After a release build, run the eight packaged MCP protocol checks with:
+The current suite has **146 Rust tests, 49 frontend tests, and 11 installer checks**. Additional blind testing covers command execution, structured previews, approval ownership, denial, timeouts, cancellation, and result integrity. After a release build, run the eight packaged MCP protocol checks with:
 
 ```sh
 node scripts/test-mcp-wire.mjs
@@ -122,6 +142,7 @@ The frontend is framework-free TypeScript. Rust owns repository operations and c
 
 ## Documentation
 
+- [Installation](docs/INSTALLATION.md) — one-line installer, checksums, and platform support
 - [User guide](docs/USER_GUIDE.md) — staging, history, branches, recovery, and appearance
 - [MCP connector](docs/MCP_CONNECTOR.md) — setup, skills, waiting, privacy, and execution limits
 - [Composable command workflows](docs/COMPOSABLE_AI_WORKFLOWS.md) — whole-command approval model

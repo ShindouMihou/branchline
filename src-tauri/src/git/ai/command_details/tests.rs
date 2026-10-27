@@ -101,10 +101,10 @@ fn reads_bounded_local_message_files_but_not_symlinks_or_outside_paths() {
         root.path().join("link.txt"),
     )
     .unwrap();
-    assert!(read_text(root.path(), "link.txt").is_err());
-    assert!(read_text(root.path(), "/etc/passwd").is_err());
+    assert!(read_text(Some(root.path()), "link.txt").is_err());
+    assert!(read_text(Some(root.path()), "/etc/passwd").is_err());
     fs::write(root.path().join("large.txt"), vec![b'x'; 64_001]).unwrap();
-    assert!(read_text(root.path(), "large.txt").is_err());
+    assert!(read_text(Some(root.path()), "large.txt").is_err());
 }
 #[test]
 fn dynamic_syntax_and_missing_values_never_claim_exact_details() {

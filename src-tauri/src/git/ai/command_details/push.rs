@@ -1,7 +1,7 @@
 use super::{read_git, Detail, State};
 use std::path::Path;
 
-pub(super) fn inspect(root: &Path, args: &[String], command_index: usize, state: &State) -> Detail {
+pub(super) fn inspect(root: Option<&Path>, args: &[String], command_index: usize, state: &State) -> Detail {
     let mut detail = Detail::new(command_index, "remote.push", "Push commits");
     detail.source_branch = state.branch.clone();
     detail.evidence = "Literal push arguments and configured remote names only. Destination state and the publication result have not been checked with the remote.".into();
@@ -30,13 +30,16 @@ pub(super) fn inspect(root: &Path, args: &[String], command_index: usize, state:
         detail.warnings.push("The remote and destination are selected by Git configuration when this command runs; no target is assumed here.".into());
         return detail;
     };
-    let configured =
-        read_git(root, &["remote"]).is_some_and(|names| names.lines().any(|name| name == *remote));
+    let configured = root.is_none_or(|root|
+        read_git(root, &["remote"]).is_some_and(|names| names.lines().any(|name| name == *remote)));
     if !configured {
         detail.warnings.push("The supplied remote is not a currently configured remote name. Its target cannot be represented here.".into());
         return detail;
     }
     detail.remote = Some((*remote).into());
+    if root.is_none() {
+        detail.evidence = "Literal remote and refspec arguments only; remote configuration and destination state are not verified.".into();
+    }
     match positional.as_slice() {
         [_] => detail.warnings.push("The destination ref is selected by Git configuration at execution time; no branch is assumed here.".into()),
         [_, refspec] => {

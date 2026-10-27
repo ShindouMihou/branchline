@@ -1,4 +1,5 @@
 mod push;
+mod literal;
 mod shell;
 mod staging;
 mod types;
@@ -17,7 +18,8 @@ fn read_git(root: &Path, args: &[&str]) -> Option<String> {
     (code == 0).then(|| String::from_utf8(out).ok()).flatten()
 }
 
-fn read_text(root: &Path, value: &str) -> Result<String, String> {
+fn read_text(root: Option<&Path>, value: &str) -> Result<String, String> {
+    let root = root.ok_or("File contents are not read after a directory or configuration change; review the file at execution time.")?;
     if value == "-" {
         return Err("The message is read from stdin when this command runs.".into());
     }
@@ -66,7 +68,7 @@ fn flag(
     long: &str,
 ) -> Option<Result<String, String>> {
     let arg = &args[*index];
-    if arg == short || arg == long {
+    if (!short.is_empty() && arg == short) || arg == long {
         *index += 1;
         return Some(
             args.get(*index)
@@ -83,6 +85,7 @@ fn flag(
     None
 }
 
+#[derive(Clone)]
 struct State {
     branch: Option<String>,
     staged: Vec<String>,
@@ -92,7 +95,7 @@ struct State {
     previous: bool,
 }
 
-fn commit(root: &Path, args: &[String], command_index: usize, state: &State) -> Detail {
+fn commit(root: Option<&Path>, args: &[String], command_index: usize, state: &State) -> Detail {
     let mut detail = Detail::new(command_index, "commit.create", "Commit changes");
     detail.warnings.push("The message shown is command input; Git cleanup, hooks, or message options may change the final commit message.".into());
     detail.source_branch = state.branch.clone();
@@ -281,7 +284,7 @@ fn create_branch(args: &[String], command_index: usize, state: &State) -> Detail
     detail
 }
 
-fn pull_request(root: &Path, args: &[String], command_index: usize, state: &State) -> Detail {
+fn pull_request(root: Option<&Path>, args: &[String], command_index: usize, state: &State) -> Detail {
     let mut detail = Detail::new(command_index, "pr.create", "Open pull request");
     detail.head_branch = state.branch.clone();
     detail.evidence = "Literal PR options; an omitted head is inferred from the current or prospectively selected branch, not verified with GitHub.".into();
@@ -374,6 +377,7 @@ pub fn inspect(root: &Path, steps: &[CommandStep]) -> Result<Vec<Detail>, String
     let mut details = Vec::new();
     for (command_index, step) in steps.iter().enumerate() {
         let mut context_uncertain = false;
+        let mut requested_directory = None;
         let commands = if step.program == "shell" {
             match step
                 .argv
@@ -395,42 +399,70 @@ pub fn inspect(root: &Path, steps: &[CommandStep]) -> Result<Vec<Detail>, String
                 .collect()]
         };
         for words in commands {
-            if context_uncertain {
-                details.push(Detail::unavailable(command_index, "An earlier shell command may change the working directory or environment. Structured details cannot be resolved in that context."));
-                continue;
-            }
-            let mut detail = match words.as_slice() {
-                [program, command, args @ ..] if program == "git" && command == "commit" => {
-                    commit(root, args, command_index, &state)
-                }
-                [program, command, args @ ..] if program == "git" && command == "add" => {
-                    stage(args, command_index, &mut state, root)
-                }
-                [program, command, args @ ..] if program == "git" && command == "push" => {
-                    push::inspect(root, args, command_index, &state)
-                }
-                [program, command, args @ ..]
-                    if program == "git" && matches!(command.as_str(), "switch" | "checkout") =>
-                {
-                    branch_detail(command, args, command_index, &mut state)
-                }
-                [program, command, args @ ..] if program == "git" && command == "branch" => {
-                    create_branch(args, command_index, &state)
-                }
-                [program, family, command, args @ ..]
-                    if program == "gh" && family == "pr" && command == "create" =>
-                {
-                    pull_request(root, args, command_index, &state)
-                }
-                _ => {
+            let words = literal::identity_command(&words).unwrap_or(words);
+            if let [program, path] = words.as_slice() {
+                if program == "cd" && Path::new(path).is_absolute() {
+                    context_uncertain = true;
+                    requested_directory = Some(path.clone());
                     state.branch = None;
+                    state.staged.clear();
+                    state.projected.clear();
                     state.index_uncertain = true;
-                    context_uncertain = !words
-                        .first()
-                        .is_some_and(|program| matches!(program.as_str(), "git" | "gh"));
-                    Detail::unavailable(command_index, "This command has no structured preview yet. Review its exact text; execution remains available.")
+                }
+            }
+            let literal_context = context_uncertain && requested_directory.is_some();
+            let git_override = matches!(words.as_slice(),[program,option,..] if program=="git"&&option.starts_with('-'));
+            let mut detail = if literal_context || literal::special(&words) {
+                literal::inspect(&words, command_index, &mut state).unwrap_or_else(|| {
+                    requested_directory = None;
+                    Detail::unavailable(
+                        command_index,
+                        "This command needs runtime interpretation. Review its exact text.",
+                    )
+                })
+            } else if context_uncertain {
+                Detail::unavailable(command_index, "An earlier shell command may change the working directory or environment. Structured details cannot be resolved in that context.")
+            } else {
+                match words.as_slice() {
+                    [program, command, args @ ..] if program == "git" && command == "commit" => {
+                        commit(Some(root), args, command_index, &state)
+                    }
+                    [program, command, args @ ..] if program == "git" && command == "add" => {
+                        stage(args, command_index, &mut state, root)
+                    }
+                    [program, command, args @ ..] if program == "git" && command == "push" => {
+                        push::inspect(Some(root), args, command_index, &state)
+                    }
+                    [program, command, args @ ..]
+                        if program == "git"
+                            && matches!(command.as_str(), "switch" | "checkout") =>
+                    {
+                        branch_detail(command, args, command_index, &mut state)
+                    }
+                    [program, command, args @ ..] if program == "git" && command == "branch" => {
+                        create_branch(args, command_index, &state)
+                    }
+                    [program, family, command, args @ ..]
+                        if program == "gh" && family == "pr" && command == "create" =>
+                    {
+                        pull_request(Some(root), args, command_index, &state)
+                    }
+                    _ => {
+                        state.branch = None;
+                        state.index_uncertain = true;
+                        context_uncertain = !words
+                            .first()
+                            .is_some_and(|program| matches!(program.as_str(), "git" | "gh"));
+                        Detail::unavailable(command_index, "This command has no structured preview yet. Review its exact text; execution remains available.")
+                    }
                 }
             };
+            if detail.working_directory.is_none() {
+                detail.working_directory = requested_directory.clone();
+            }
+            if literal_context {
+                detail.warnings.push("Directory and command arguments are requested values. Directory changes, command success, file selection and repository state are not verified here.".into());
+            }
             if detail.kind == "details_unavailable" {
                 state.branch = None;
                 state.index_uncertain = true;
@@ -441,10 +473,14 @@ pub fn inspect(root: &Path, steps: &[CommandStep]) -> Result<Vec<Detail>, String
                 }
                 detail.warnings.push("This is a prospective later action; whether it runs depends on earlier commands and shell control flow.".into());
             }
-            if detail.kind == "commit.create" {
+            if detail.kind == "commit.create" && !git_override {
                 state.staged.clear();
                 state.projected.clear();
                 state.projected_scope_uncertain = false;
+                state.index_uncertain = true;
+            }
+            if git_override {
+                state.projected_scope_uncertain = true;
                 state.index_uncertain = true;
             }
             state.previous = true;
@@ -472,3 +508,6 @@ mod blind_tests;
 
 #[cfg(test)]
 mod blind_cycles;
+
+#[cfg(test)]
+mod context_tests;

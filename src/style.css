@@ -815,3 +815,8 @@ html[data-simplified="true"] .tabs { padding:0 14px; min-height:48px; }
 .ai-clear-activity [role=group]>div { display:flex;gap:8px;margin-top:12px;flex-wrap:wrap; }
 .ai-clear-activity [role=group] button { font-size:.75em; }
 .ai-danger-button { color:#d9a3a3; }
+.ai-repo-context>small { font-size:.75em;color:var(--muted); }
+.ai-command-detail-directory .ai-command-detail-icon,.ai-command-detail-repository .ai-command-detail-icon { color:var(--accent); }
+.ai-release-assets { list-style:none;padding:0;margin:8px 0;display:grid;gap:9px; }
+.ai-release-assets li { display:flex;align-items:center;gap:8px;min-width:0; }
+.ai-release-assets svg { width:14px;height:14px;color:var(--accent);flex-shrink:0; }

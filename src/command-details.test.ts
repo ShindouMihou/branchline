@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import { expect, it } from 'vitest';
-import { commandDetails } from './command-details';
+import { commandDetails,commandContext } from './command-details';
 import type { AiCommandDetail } from './types/ai-command-details';
 
 it('groups structured command details by requested step and keeps unknowns explicit', () => {
@@ -39,7 +39,7 @@ it('shows push routes and keeps unsupported details compact', () => {
   expect(document.querySelector('.ai-command-route')?.textContent).toContain('feat/review');
   expect(document.querySelector('.ai-command-evidence-label')?.textContent).toBe('Projected');
   expect(document.querySelectorAll('.ai-command-detail')).toHaveLength(1);
-  expect(document.querySelector('.ai-command-detail-unavailable summary')?.textContent).toContain('Review the exact command');
+  expect(document.querySelector('.ai-command-detail-unavailable summary')?.textContent).toContain('One step needs command review');
 });
 
 it('lists matching stage and commit files once, while keeping staging inspectable',()=>{
@@ -55,4 +55,33 @@ it('lists matching stage and commit files once, while keeping staging inspectabl
   details[1].files!.push('already-staged.txt');
   document.body.innerHTML=commandDetails(details,0);
   expect(document.querySelectorAll('.ai-command-files')).toHaveLength(2);
+});
+
+it('groups unavailable details once while keeping recognized operation cards and requested directory',()=>{
+ const details:AiCommandDetail[]=[
+  {commandIndex:0,kind:'context.directory',title:'Change working directory',workingDirectory:'/projects/branchline',warnings:[],evidence:'Requested directory',evidenceKind:'command'},
+  {commandIndex:0,kind:'repository.init',title:'Initialize Git repository',targetBranch:'main',warnings:[],evidence:'Literal'},
+  {commandIndex:0,kind:'commit.create',title:'Commit changes',message:'Publish the app',warnings:[],evidence:'Literal'},
+  {commandIndex:0,kind:'repository.create',title:'Create GitHub repository',repository:'owner/branchline',visibility:'public',sourceDirectory:'.',warnings:[],evidence:'Literal'},
+  ...Array.from({length:3},()=>({commandIndex:0,kind:'details_unavailable',title:'Unknown',warnings:['The same uncertainty'],evidence:'Unknown'})),
+ ];
+ document.body.innerHTML=commandDetails(details,0);
+ expect(document.querySelectorAll('.ai-command-detail')).toHaveLength(4);
+ expect(document.querySelectorAll('.ai-command-detail-unavailable')).toHaveLength(1);
+ expect(document.querySelector('.ai-command-detail-unavailable summary')?.textContent).toContain('3 steps need command review');
+ expect(document.body.textContent?.match(/The same uncertainty/g)).toHaveLength(1);
+ expect(document.body.textContent).toContain('owner/branchline');expect(document.body.textContent).toContain('public');
+});
+
+it('labels a requested directory without retaining the starting repository branch',()=>{
+ const detail:AiCommandDetail={commandIndex:0,kind:'context.directory',title:'Directory',workingDirectory:'/projects/branchline',warnings:[],evidence:''};
+ expect(commandContext([detail],'/demo','feat/demo')).toEqual({directory:'/projects/branchline',branch:undefined,requested:true});
+ expect(commandContext([], '/demo','feat/demo')).toEqual({directory:'/demo',branch:'feat/demo',requested:false});
+});
+
+it('shows release version, target and attachments without turning assets into diff actions',()=>{
+ const detail:AiCommandDetail={commandIndex:0,kind:'release.create',title:'Create GitHub release',tag:'v0.4.0',releaseTitle:'Branchline 0.4.0',repository:'owner/branchline',targetBranch:'main',assets:['/release/Branchline.zip','/release/Branchline.zip.sha256'],notesFile:'/release/notes.md',warnings:[],evidence:'Literal'};
+ document.body.innerHTML=commandDetails([detail],0);
+ expect(document.body.textContent).toContain('v0.4.0');expect(document.body.textContent).toContain('owner/branchline');expect(document.body.textContent).toContain('main');
+ expect(document.querySelectorAll('.ai-release-assets li')).toHaveLength(2);expect(document.querySelector('[data-ai-review-changes]')).toBeNull();
 });
