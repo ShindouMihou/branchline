@@ -44,3 +44,7 @@ Move the extracted app into your Applications folder and open it when ready.
 ## Uninstall
 
 Quit Branchline and move its app bundle to Trash. Removing the app does not remove its separately stored settings, connections, or activity. Request receipts can be cleared through the app's Activity view before uninstalling.
+
+## Updates inside Branchline
+
+Updater-enabled releases can check for and install signed updates from **Branchline → Check for Updates…**. Automatic checks and manual installation settings are in **Appearance → App updates**. Versions through 0.4.2 need one manual upgrade to receive the updater. See [in-app updates](UPDATES.md) for details.

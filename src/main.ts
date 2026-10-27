@@ -15,6 +15,7 @@ import {parseLayout,layoutKey,togglePanel,bindPanelResizers,isPanelResizing,type
 import {createBranchCache,menuPosition} from './branch-cache';
 import {detectLanguage,languages,tokenize,type Tokens} from './syntax';
 import {createSkillSetup} from './skill-setup';
+import {createAppUpdates} from './app-updates';
 import './style.css';
 interface FileEntry { path: string; old_path: string | null; index: string; worktree: string }
 interface Repo { root: string; name: string; branch: string; branchRef: string; head: string; stateToken: string; revision?: string; watching?: boolean; files: FileEntry[]; lineStats?:{additions:number;deletions:number;binaryFiles:number;skippedFiles:number}|null; stagedToken: string; detailsPending?:boolean; remotes: string[]; tracking: { upstream: string | null; ahead: number; behind: number; remote: string | null; merge: string | null }; operation: string | null; operationResult?: string; backupRef?: string }
@@ -52,7 +53,8 @@ let menuPoint={x:0,y:0};
 let historyRequest=0, historyPending=false;
 const historyCache=new Map<string,{files:string[];path:string;diff:Diff|null}>();
 const skillSetup=createSkillSetup(()=>render());
-const ai=createAiWorkspace({render:()=>render(),root:()=>repo?.root??null,canPrompt:()=>!dialog&&!busy&&!historyPending&&!skillSetup.isOpen(),openSkills:()=>void skillSetup.show()});
+const appUpdates=createAppUpdates(()=>render(),()=>{dialog=null;});
+const ai=createAiWorkspace({render:()=>render(),root:()=>repo?.root??null,canPrompt:()=>!dialog&&!busy&&!historyPending&&!skillSetup.isOpen()&&!appUpdates.isOpen(),openSkills:()=>void skillSetup.show()});
 const icons = { FolderOpen, GitBranch, RefreshCw, GitCommitHorizontal, History, Files, Plus, Minus, Check, ChevronRight, Columns2, AlignLeft, Search, ArrowDown, ArrowUp, X, Circle, FileCode2, Settings2, CircleHelp, GitMerge, Pencil, Cherry, Undo2, Copy, ShieldCheck, Plug, Sparkles, Clock3, ChevronDown, ChevronUp, ChevronLeft, Terminal, ArrowRight, CircleDot, Info, FolderPlus, ArrowUpRight, Flag, GitPullRequest, Trash2, BookOpen, Tag };
 const icon = (name: string) => `<i data-lucide="${name}" aria-hidden="true"></i>`;
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -77,16 +79,16 @@ function render() {
     <header class="topbar"><div class="brand"><span class="brand-mark"><img src="${logoUrl}" alt="" width="26" height="26"></span><span class="wordmark">branchline</span></div>
     <button id="open" class="repo-picker" title="${repo ? esc(repo.root)+' · Change repository (⌘O)' : 'Open repository (⌘O)'}">${icon('folder-open')}<span>${repo ? esc(repo.name) : restoringRepository?esc(basename(savedRepository)):'Open repository'}</span>${icon('chevron-right')}</button>
     ${repo ? `<button id="branches" class="branch" title="Switch branch">${icon('git-branch')} <span class="branch-name">${esc(repo.branch)}</span> ${icon('chevron-right')}</button>` : ''}
-    <div class="top-actions">${repo ? `<div class="update-control"><div class="update-split"><button id="update" title="Fetch the latest commits and fast-forward this branch" ${busy?'disabled':''}>${icon('arrow-down')} Update${repo.tracking.behind?`<span class="action-count">${repo.tracking.behind}</span>`:''}</button><button id="update-options" title="Update options" aria-label="Update options" aria-haspopup="menu" aria-expanded="${updateMenu}" aria-controls="update-menu" ${busy?'disabled':''}>${icon('chevron-right')}</button></div>${updateMenu?updateOptions():''}</div><button data-network="push" title="Push your commits" ${busy?'disabled':''}>${icon('arrow-up')} Push${repo.tracking.ahead?`<span class="action-count">${repo.tracking.ahead}</span>`:''}</button>`:''}${ai.toolbar()}<button id="appearance" class="icon-button" title="Appearance" aria-label="Appearance settings">${icon('settings-2')}</button></div></header>
+    <div class="top-actions">${repo ? `<div class="update-control"><div class="update-split"><button id="update" title="Fetch the latest commits and fast-forward this branch" ${busy?'disabled':''}>${icon('arrow-down')} Update${repo.tracking.behind?`<span class="action-count">${repo.tracking.behind}</span>`:''}</button><button id="update-options" title="Update options" aria-label="Update options" aria-haspopup="menu" aria-expanded="${updateMenu}" aria-controls="update-menu" ${busy?'disabled':''}>${icon('chevron-right')}</button></div>${updateMenu?updateOptions():''}</div><button data-network="push" title="Push your commits" ${busy?'disabled':''}>${icon('arrow-up')} Push${repo.tracking.ahead?`<span class="action-count">${repo.tracking.ahead}</span>`:''}</button>`:''}${appUpdates.toolbar()}${ai.toolbar()}<button id="appearance" class="icon-button" title="Appearance" aria-label="Appearance settings">${icon('settings-2')}</button></div></header>
     ${error ? `<div class="banner error" role="alert"><span>${esc(error)}</span><button id="dismiss" aria-label="Dismiss error">${icon('x')}</button></div>` : ''}
     ${notification ? `<div class="banner success" role="status"><span>${icon('check')} ${esc(notification)}</span>${recoveryRef ? `<details class="recovery-details"><summary>Recovery details</summary><code>${esc(recoveryRef)}</code><button id="copy-recovery">Copy recovery ref</button></details>` : ''}<button id="dismiss-note" aria-label="Dismiss notification">${icon('x')}</button></div>` : ''}
     ${repo?.operation ? `<div class="banner operation"><span>A ${esc(repo.operation)} is in progress. Finish it in Git, or abort.</span><button id="abort-operation">Abort ${esc(repo.operation)}</button></div>` : ''}
     ${repo ? workspace() : restoringRepository?startupWorkspace():welcome()}
-    ${dialog ? renderDialog() : ''}${ai.render()}${skillSetup.render()}
+    ${dialog ? renderDialog() : ''}${ai.render()}${skillSetup.render()}${appUpdates.render()}
     <footer class="statusbar"><span>${icon('git-branch')} ${esc(repo?.branch ?? 'No repository')}</span><span>${busy ? 'Git operation in progress…' : loadingDiff ? 'Loading diff…' : repo ? changedLines(repo) : 'Ready'}</span><span class="status-right">${repo ? esc(repo.root) : 'Local repositories · Git staging workflow'}</span></footer>
   </div>`;
   createIcons({ icons, attrs: { width: 16, height: 16, 'stroke-width': 1.6 } });
-  bind(); bindOperations();ai.bind();skillSetup.bind();bindPanelResizers(app,layout,saveLayout);
+  bind(); bindOperations();ai.bind();skillSetup.bind();appUpdates.bind();bindPanelResizers(app,layout,saveLayout);
   restoreAiViewport(app,aiViewport);
   sizeDiffColumns();app.querySelectorAll<HTMLElement>('[data-diff-scroll]').forEach((track,index)=>{track.scrollLeft=sideOffsets[index]??0;track.dispatchEvent(new Event('scroll'));});diffObserver?.disconnect();const diffViewport=app.querySelector('.diff-content');if(diffViewport&&typeof ResizeObserver!=='undefined'){diffObserver=new ResizeObserver(sizeDiffColumns);diffObserver.observe(diffViewport);}
   const branchList=app.querySelector('.branch-list');if(branchList)branchList.scrollTop=branchScroll;
@@ -274,9 +276,9 @@ async function doCommit() {
   if (!repo || !message.trim() || !repo.stagedToken) return;
   await action(async () => { repo = await api<Repo>({ op: 'commit', message, expected: repo!.stagedToken }); message = ''; localStorage.removeItem('branchline.draft:' + repo!.root); historyLoaded = false; notification = 'Commit created. Your staged changes are now in history.'; await reconcileSelection(); });
 }
-document.addEventListener('keydown', e => { if (dialog||ai.isOpen()) return; if (!(e.metaKey || e.ctrlKey)) return; if (e.key.toLowerCase() === 'n') {e.preventDefault();void invoke('new_window').catch(reason=>{error=String(reason);render()});} if (e.key.toLowerCase() === 'o') { e.preventDefault(); pickRepo(); } if (e.key.toLowerCase() === 'r') { e.preventDefault(); action(refresh); } if (e.key === 'Enter' && tab === 'changes') { e.preventDefault(); doCommit(); } });
+document.addEventListener('keydown', e => { if (dialog||ai.isOpen()||appUpdates.isOpen()) return; if (!(e.metaKey || e.ctrlKey)) return; if (e.key.toLowerCase() === 'n') {e.preventDefault();void invoke('new_window').catch(reason=>{error=String(reason);render()});} if (e.key.toLowerCase() === 'o') { e.preventDefault(); pickRepo(); } if (e.key.toLowerCase() === 'r') { e.preventDefault(); action(refresh); } if (e.key === 'Enter' && tab === 'changes') { e.preventDefault(); doCommit(); } });
 let lastInteraction=0;
-const canAutoRefresh=()=>!isPanelResizing()&&!!repo&&!busy&&!historyPending&&!dialog&&!ai.isOpen()&&!updateMenu&&!menu&&!document.hidden&&Date.now()-lastInteraction>400;
+const canAutoRefresh=()=>!isPanelResizing()&&!!repo&&!busy&&!historyPending&&!dialog&&!ai.isOpen()&&!appUpdates.isOpen()&&!updateMenu&&!menu&&!document.hidden&&Date.now()-lastInteraction>400;
 document.addEventListener('pointerdown',()=>{lastInteraction=Date.now();});
 document.addEventListener('keydown',()=>{lastInteraction=Date.now();});
 const checkLocalChanges=createAutoRefresh({current:()=>repo,allowed:canAutoRefresh,revision:()=>api({op:'revision'}),refresh:refreshInBackground});
@@ -289,7 +291,7 @@ if(isTauri()){
   void (async()=>{
     let firstWindow=true;
     try{const context=await invoke<{root:string|null;fresh:boolean}>('window_context');if(context){firstWindow=!context.fresh;persistRepository=!context.fresh;savedRepository=context.root??(context.fresh?'':savedRepository);restoringRepository=!!savedRepository;render();}}catch{}
-    ai.start();
+    ai.start();appUpdates.start();
     let presented=false;const present=()=>{if(presented)return;presented=true;void invoke('frontend_ready').catch(()=>{})};
     requestAnimationFrame(present);window.setTimeout(present,80);
     if(savedRepository)await openRepo(savedRepository).finally(()=>{restoringRepository=false;render()});
@@ -485,7 +487,7 @@ function appearanceContent() {
   <div class="setting"><label for="code-font-size"><span>Diff text</span><output id="code-font-value">${appearance.codeSize} px</output></label><input id="code-font-size" type="range" min="12" max="20" step="1" value="${appearance.codeSize}"><div class="range-labels"><span>Smaller</span><span>Larger</span></div><code class="appearance-code-preview">const branch = "main";</code></div>
   <fieldset class="setting spacing-setting"><legend>Spacing</legend><div class="spacing-options">${(['compact','comfortable','relaxed'] as const).map(value=>`<label><input type="radio" name="spacing" value="${value}" ${appearance.spacing===value?'checked':''}><span>${value[0].toUpperCase()+value.slice(1)}</span></label>`).join('')}</div></fieldset>
   <div class="setting"><label for="dark-contrast"><span>Dark-mode contrast</span><output id="contrast-value">${appearance.contrast}%</output></label><input id="dark-contrast" type="range" min="0" max="100" step="5" value="${appearance.contrast}"><div class="range-labels"><span>Soft charcoal</span><span>Deep black</span></div></div>
-  <label class="simple-setting"><input id="simplified-ui" type="checkbox" ${appearance.simplified?'checked':''}><span><strong>Simplified interface</strong><small>Fewer controls and less metadata. Commit details stay available when you select a row.</small></span></label>`;
+  <label class="simple-setting"><input id="simplified-ui" type="checkbox" ${appearance.simplified?'checked':''}><span><strong>Simplified interface</strong><small>Fewer controls and less metadata. Commit details stay available when you select a row.</small></span></label>${appUpdates.settings()}`;
 }
 function saveAppearance() {
   appearance=parseAppearance(JSON.stringify(appearance));

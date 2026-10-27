@@ -376,6 +376,10 @@ fn cancellation_finished(status: &str) -> bool {
 }
 
 impl Broker {
+    pub fn has_active_execution(&self) -> bool {
+        self.journal.plans.iter().any(|plan| matches!(plan.status.as_str(), "approved" | "running"))
+    }
+
     pub fn start(dir: PathBuf) -> Result<Shared, String> {
         fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
         fs::set_permissions(&dir, fs::Permissions::from_mode(0o700)).map_err(|e| e.to_string())?;

@@ -1,6 +1,6 @@
 {
   "name": "branchline",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "private": true,
   "license": "Apache-2.0",
   "type": "module",
@@ -10,7 +10,9 @@
     "tauri": "node scripts/tauri.mjs",
     "test": "vitest run",
     "test:installer": "node --test tests/install-check.mjs",
-    "desktop": "node scripts/tauri.mjs dev"
+    "desktop": "node scripts/tauri.mjs dev",
+    "release:prepare": "node scripts/prepare-release.mjs",
+    "test:release": "node --test tests/release-manifest-check.mjs"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",

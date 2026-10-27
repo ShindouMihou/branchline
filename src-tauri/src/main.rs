@@ -3,6 +3,7 @@ mod ai;
 mod git;
 mod skills;
 mod windows;
+mod updates;
 use std::sync::Arc;
 use tauri::{Emitter, Manager};
 #[tauri::command]
@@ -47,25 +48,28 @@ async fn skill_setup(
 }
 struct Connector(Result<ai::Shared, String>);
 #[tauri::command]
+async fn app_update(
+    app: tauri::AppHandle,
+    window: tauri::WebviewWindow,
+    request: updates::Request,
+    connector: tauri::State<'_, Connector>,
+) -> Result<updates::Snapshot, String> {
+    app.state::<windows::Windows>().service(window.label())?;
+    updates::handle(app, request, connector.0.as_ref().ok().cloned()).await
+}
+
+#[tauri::command]
 async fn request(
     request: git::Request,
     state: tauri::State<'_, windows::Windows>,
     window: tauri::WebviewWindow,
-    connector: tauri::State<'_, Connector>,
 ) -> Result<serde_json::Value, String> {
     let service = state.service(window.label())?;
     let handle = window.app_handle().clone();
     let label = window.label().to_string();
-    let gate = connector
-        .0
-        .as_ref()
-        .ok()
-        .and_then(|b| b.lock().ok().map(|b| b.operation_gate.clone()));
+    let gate = handle.state::<updates::Updates>().gate.clone();
     tauri::async_runtime::spawn_blocking(move || {
-        let _queue = gate
-            .as_ref()
-            .map(|g| g.lock().map_err(|_| "Execution queue unavailable"))
-            .transpose()?;
+        let _queue = gate.lock().map_err(|_| "Execution queue unavailable")?;
         let result = service
             .lock()
             .map_err(|_| "Repository service unavailable".to_string())?
@@ -225,6 +229,7 @@ fn main() {
         .manage(windows::Windows::new(!background))
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             let menu = tauri::menu::Menu::default(app.handle())?;
             let item = tauri::menu::MenuItem::with_id(
@@ -234,8 +239,12 @@ fn main() {
                 true,
                 Some("CmdOrCtrl+N"),
             )?;
+            let update_item = tauri::menu::MenuItem::with_id(app, "check-app-updates", "Check for Updates…", true, None::<&str>)?;
             for entry in menu.items()? {
                 if let tauri::menu::MenuItemKind::Submenu(submenu) = entry {
+                    if submenu.text()?.replace('&', "") == "Branchline" {
+                        submenu.insert(&update_item, 1)?;
+                    }
                     if submenu.text()?.replace('&', "") == "File" {
                         submenu.prepend(&item)?;
                     }
@@ -280,6 +289,8 @@ fn main() {
             tauri::async_runtime::spawn_blocking(move || {
                 let _ = installer.auto_update();
             });
+            let gate = broker.as_ref().ok().and_then(|broker| broker.lock().ok().map(|broker| broker.operation_gate.clone())).unwrap_or_default();
+            app.manage(updates::Updates::new(app.path().app_local_data_dir()?.join("updates.json"), gate));
             app.manage(Connector(broker));
             Ok(())
         })
@@ -292,9 +303,19 @@ fn main() {
             skill_setup,
             open_setup_docs,
             open_github_pull_request,
-            open_markdown_link
+            open_markdown_link,
+            app_update
         ])
         .on_menu_event(|app, event| {
+            if event.id().as_ref() == "check-app-updates" {
+                let windows = app.webview_windows();
+                if let Some(window) = windows.values().find(|window| window.is_focused().unwrap_or(false)).or_else(|| windows.values().next()) {
+                    let _ = window.unminimize();
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                    let _ = window.emit("check-for-app-updates", ());
+                }
+            }
             if event.id().as_ref() == "new-window" {
                 let _ = app.state::<windows::Windows>().create(app, None);
             }

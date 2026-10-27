@@ -216,3 +216,14 @@ Public repository, context previews and installer (2026-10-27):
 - Added typed destination rows for branch/tag/ref targets, literal HEAD fallback, atomic option ordering, visible incomplete-coverage notices, and compatibility with older activity records. No command execution behavior changed.
 - Verified the release command shape after commit/tag steps, annotated tags, multiple refspecs, unresolved force/wildcard/deletion syntax, and unsupported options. The regression suite uses temporary repositories and no network pushes.
 - Validation: 154 Rust tests, 56 frontend tests, production desktop build, and a visual check of the branch/tag card.
+
+
+## Signed in-app updates
+
+- Added global, coalesced startup/six-hour checks, an automatic-check preference, native Check for Updates menu, optional update badge, and a download/install/restart dialog with sanitized Markdown release notes. Background failures do not open a modal or claim the app is current.
+- Native installation requires the exact displayed candidate version, accepts only the official HTTPS release path, and uses Tauri's mandatory artifact signature and signed-version verification. The private key is outside the repository; only its public key is configured in the app.
+- The installation guard shares the Git/MCP operation gate, blocks active or queued approved AI commands, and holds both guards across replacement and restart. Frontend tests cover explicit installation, retry, global preferences, download progress, and stale cross-window events.
+- The release helper creates the standard ZIP/checksum plus signed tarball/signature and latest.json. It refuses mismatched keys, versions, architectures, signatures without bound versions, and existing output directories.
+- Local validation: 158 Rust tests, 60 frontend tests, two release-manifest checks, and successful creation of the signed updater artifact set. Verified the archive against the embedded public key and rejected a modified archive in an isolated verifier. Live upgrade/restart has not been exercised against a published updater-enabled release; no published release was modified.
+
+- Updater dialog polish: scoped form layout prevents the general modal label/input rules from stacking the switch; status/version/settings/actions use compact rows. Verified error and available-update layouts at 16 px and 18 px interface sizes.
