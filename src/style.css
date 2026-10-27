@@ -841,3 +841,12 @@ html[data-simplified="true"] .tabs { padding:0 14px; min-height:48px; }
 .markdown-content :is(th,td) { padding:7px 12px; border:1px solid var(--border); text-align:left; }
 .markdown-content hr { border:0; border-top:1px solid var(--border); margin:1em 0; }
 .markdown-image-label { color:var(--muted); font-style:italic; }
+
+.ai-push-targets { list-style:none; padding:0; margin:0; }
+.ai-push-targets li { display:grid; grid-template-columns:70px minmax(0,1fr); gap:12px; align-items:center; padding:8px 0; }
+.ai-push-kind { display:flex; align-items:center; gap:7px; color:var(--muted); font-size:.8em; }
+.ai-push-kind svg { width:15px; height:15px; flex:none; }
+.ai-push-targets .ai-command-route { display:grid; grid-template-columns:minmax(0,1fr) 16px minmax(0,1fr); min-width:0; }
+.ai-push-targets code { min-width:0; overflow-wrap:anywhere; }
+.ai-push-atomic { color:var(--text); font-size:.85em; margin:12px 0; }
+.ai-push-atomic span { display:block; color:var(--muted); font-size:.95em; margin-top:3px; }

@@ -261,3 +261,6 @@ fn implicit_push_does_not_invent_a_remote_or_destination() {
     assert_eq!(details[1].remote.as_deref(), Some("origin"));
     assert!(details.iter().all(|detail| !detail.warnings.is_empty()));
 }
+
+#[path = "push_tests.rs"]
+mod push_tests;

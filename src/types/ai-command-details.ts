@@ -7,6 +7,9 @@ export interface AiCommandDetail {
   filePreviews?: {path:string;source:'index'|'worktree'}[];
   evidenceKind?: 'current_snapshot'|'projected'|'command'|'unknown';
   remote?: string;
+  pushTargets?: {sourceRef:string;targetRef:string;sourceBranch?:string;kind:'branch'|'tag'|'ref'}[];
+  atomic?: boolean;
+  pushTargetsIncomplete?: boolean;
   sourceBranch?: string;
   targetBranch?: string;
   baseBranch?: string;

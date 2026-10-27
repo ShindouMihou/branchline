@@ -87,7 +87,7 @@ Optional settings:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/ShindouMihou/branchline/main/scripts/install.sh | \
-  BRANCHLINE_VERSION=v0.4.1 BRANCHLINE_INSTALL_DIR="$HOME/Applications" bash
+  BRANCHLINE_VERSION=v0.4.2 BRANCHLINE_INSTALL_DIR="$HOME/Applications" bash
 ```
 
 ## Run locally
@@ -120,7 +120,7 @@ npm run test:installer
 cargo test --manifest-path src-tauri/Cargo.toml
 ```
 
-The current suite has **147 Rust tests, 53 frontend tests, and 11 installer checks**. Additional blind testing covers command execution, structured previews, approval ownership, denial, timeouts, cancellation, and result integrity. After a release build, run the eight packaged MCP protocol checks with:
+The current suite has **154 Rust tests, 56 frontend tests, and 11 installer checks**. Additional blind testing covers command execution, structured previews, approval ownership, denial, timeouts, cancellation, and result integrity. After a release build, run the eight packaged MCP protocol checks with:
 
 ```sh
 node scripts/test-mcp-wire.mjs

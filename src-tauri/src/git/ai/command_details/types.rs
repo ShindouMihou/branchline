@@ -18,6 +18,12 @@ pub struct Detail {
     pub target_branch: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub remote: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub push_targets: Vec<PushTarget>,
+    #[serde(default)]
+    pub push_targets_incomplete: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub atomic: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub base_branch: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -52,6 +58,24 @@ pub struct Detail {
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
 #[serde(rename_all = "camelCase")]
+pub struct PushTarget {
+    pub source_ref: String,
+    pub target_ref: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub source_branch: Option<String>,
+    pub kind: PushTargetKind,
+}
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum PushTargetKind {
+    Branch,
+    Tag,
+    Ref,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug)]
+#[serde(rename_all = "camelCase")]
 pub struct FileSelection {
     pub path: String,
     pub source: FileSource,
@@ -76,6 +100,9 @@ impl Detail {
             source_branch: None,
             target_branch: None,
             remote: None,
+            push_targets: Vec::new(),
+            push_targets_incomplete: false,
+            atomic: None,
             base_branch: None,
             head_branch: None,
             pull_request_title: None,

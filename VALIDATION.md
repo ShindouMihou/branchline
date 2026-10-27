@@ -208,3 +208,11 @@ Public repository, context previews and installer (2026-10-27):
 - Raw HTML stays escaped, images render as labels without loading remote assets, and only HTTP/HTTPS links without credentials can open in the browser. Native validation repeats the link restrictions.
 - Verified the completed release request in the rebuilt desktop app: Markdown headings and bullets render correctly, and the installer command appears in a code block.
 - Release validation: 147 Rust tests, 53 frontend tests, 11 offline installer checks, and eight packaged MCP protocol checks.
+
+
+## Atomic push preview follow-up
+
+- Reproduced the missing remote with a failing regression for `git push --atomic origin HEAD:main refs/tags/v0.4.1`. The push inspector returned before reading positional arguments and could not represent multiple destinations.
+- Added typed destination rows for branch/tag/ref targets, literal HEAD fallback, atomic option ordering, visible incomplete-coverage notices, and compatibility with older activity records. No command execution behavior changed.
+- Verified the release command shape after commit/tag steps, annotated tags, multiple refspecs, unresolved force/wildcard/deletion syntax, and unsupported options. The regression suite uses temporary repositories and no network pushes.
+- Validation: 154 Rust tests, 56 frontend tests, production desktop build, and a visual check of the branch/tag card.
