@@ -200,3 +200,11 @@ Public repository, context previews and installer (2026-10-27):
 - Reproduced the publication chain's repeated unknown-summary rows after cd. Added argument-only cards for a literal absolute directory change, Git initialization, configured identity arguments, GitHub repository creation/settings and later commit/push details. New contexts never read message/body files or invent diff membership. Relative/dynamic contexts remain conservative. Unknown details are grouped once; headers distinguish starting repository from requested directory and omit an unrelated branch.
 - The macOS installer resolves a release, validates platform/version/checksum/bundle identity/signature, stages on the destination volume and restores the prior app after a replacement failure. It does not use sudo, remove quarantine, bypass Gatekeeper or launch the app.
 - Final suites: 146 Rust tests, 49 frontend tests, and 11 offline installer checks. Installer checks cover success/update, corruption, signature/identity rejection, unsupported hardware/OS, running GUI, invalid tags, failed downloads and rollback. Offline helpers do not establish actual network or notarization behavior.
+
+
+## Markdown rendering — v0.4.1
+
+- Shared Markdown rendering covers release notes, pull request descriptions, and expanded AI explanations. Headings, lists, tables, quotes, inline formatting, links, and fenced code blocks use scoped dark-mode styling. Commands, commit messages, filenames, and output remain literal.
+- Raw HTML stays escaped, images render as labels without loading remote assets, and only HTTP/HTTPS links without credentials can open in the browser. Native validation repeats the link restrictions.
+- Verified the completed release request in the rebuilt desktop app: Markdown headings and bullets render correctly, and the installer command appears in a code block.
+- Release validation: 147 Rust tests, 53 frontend tests, 11 offline installer checks, and eight packaged MCP protocol checks.

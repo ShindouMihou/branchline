@@ -131,6 +131,26 @@ fn open_setup_docs(provider: String) -> Result<(), String> {
         Err("Could not open setup documentation".into())
     }
 }
+fn markdown_link_url(url: &str) -> Result<tauri::Url, String> {
+    let parsed = tauri::Url::parse(url).map_err(|_| "Invalid web link")?;
+    if !matches!(parsed.scheme(), "https" | "http")
+        || parsed.host_str().is_none()
+        || !parsed.username().is_empty()
+        || parsed.password().is_some()
+    {
+        return Err("Only HTTP and HTTPS web links are supported".into());
+    }
+    Ok(parsed)
+}
+#[tauri::command]
+fn open_markdown_link(url: String) -> Result<(), String> {
+    let parsed = markdown_link_url(&url)?;
+    let status = std::process::Command::new("/usr/bin/open")
+        .arg(parsed.as_str())
+        .status()
+        .map_err(|error| error.to_string())?;
+    if status.success() { Ok(()) } else { Err("Could not open web link".into()) }
+}
 #[tauri::command]
 fn open_github_pull_request(url: String) -> Result<(), String> {
     let path = url
@@ -271,7 +291,8 @@ fn main() {
             new_window,
             skill_setup,
             open_setup_docs,
-            open_github_pull_request
+            open_github_pull_request,
+            open_markdown_link
         ])
         .on_menu_event(|app, event| {
             if event.id().as_ref() == "new-window" {
@@ -296,4 +317,17 @@ fn main() {
                 app.state::<windows::Windows>().reopen(app);
             }
         });
+}
+
+#[cfg(test)]
+mod markdown_link_tests {
+    #[test]
+    fn allows_only_web_links_without_credentials() {
+        for url in ["https://github.com/owner/repo", "http://localhost:3000/docs"] {
+            assert!(super::markdown_link_url(url).is_ok());
+        }
+        for url in ["javascript:alert(1)", "file:///etc/passwd", "data:text/html,test", "/relative", "https://user:password@example.com"] {
+            assert!(super::markdown_link_url(url).is_err(), "{url}");
+        }
+    }
 }
