@@ -10,7 +10,7 @@ vi.mock('@tauri-apps/api/event',()=>({listen:vi.fn(async()=>()=>{})}));
 it('separates AI claims from verified effects and approves only complete requests',async()=>{
   const p={id:'plan',digest:'bound-digest',clientName:'Paired host',reportedAi:'Self-reported model',repository:'/repo',status:'pending_review',createdAt:1,issue:null,explanation:{summary:'Save the change',reason:'<img src=x onerror=alert(1)>',impact:'Publish the reviewed commit.',uncertainties:['The remote may have changed.']},requestedSteps:[{kind:'commit.create',message:'Reviewed message'},{kind:'remote.push',remote:'origin',branch:'main'}],preview:{branch:'refs/heads/main',files:['file.txt'],patch:'@@ -1 +1 @@\n-before\n+after',warnings:['Publishing sends changes to the remote.'],risks:[] as {code:string;title:string;detail:string}[],push:{remote:'origin',branch:'main',destination:'/remote.git',expectedOid:'a'.repeat(40),commits:[]}},approval:null,execution:[],events:[]};
   const state={enabled:true,pending:1,clients:[{id:'client',name:'Paired host',active:true,repositories:[]}],plans:[p],selectedPlan:null as unknown};
-  invoke.mockImplementation(async(_cmd,{request})=>{if(_cmd==='skill_setup')return request.op==='status'?{content:'Guide <safe>',targets:[{id:'agents',name:'Codex & Cursor',path:'/home/.agents/skills/branchline-git-approval/SKILL.md',status:'available',detail:'All projects'}]}:{results:[{ok:true}]};if(request.op==='status')return {...state,selectedPlan:request.plan_id?p:null};if(request.op==='register')return {configuration:{mcpServers:{branchline:{command:'/Applications/Branchline.app/Contents/MacOS/branchline',args:['--mcp','--credential-file','/private/client.json']}}}};return {accepted:true}});
+  invoke.mockImplementation(async(_cmd,{request})=>{if(_cmd==='skill_setup')return request.op==='status'?{content:'Guide <safe>',instructions:[{id:'codex',name:'Codex',skillTargetId:'agents',path:'/home/.codex/AGENTS.md',status:'available',detail:'Add a reminder',content:'<!-- branchline:integration:start -->\nReminder\n<!-- branchline:integration:end -->',removable:false}],targets:[{id:'agents',name:'Codex & Cursor',path:'/home/.agents/skills/branchline-git-approval/SKILL.md',status:'available',detail:'All projects'}]}:{results:[{ok:true}]};if(request.op==='status')return {...state,selectedPlan:request.plan_id?p:null};if(request.op==='register')return {configuration:{mcpServers:{branchline:{command:'/Applications/Branchline.app/Contents/MacOS/branchline',args:['--mcp','--credential-file','/private/client.json']}}}};return {accepted:true}});
   let ui:ReturnType<typeof createAiWorkspace>;const paint=()=>{document.body.innerHTML=ui.toolbar()+ui.render();ui.bind()};
   ui=createAiWorkspace({render:paint,root:()=>'/repo'});paint();ui.start();
   await vi.waitFor(()=>expect(document.getElementById('ai-requests')?.textContent).toContain('1'));
@@ -60,8 +60,9 @@ it('separates AI claims from verified effects and approves only complete request
   await vi.waitFor(()=>expect(document.getElementById('ai-copy-guide')).not.toBeNull());
   expect(document.querySelector('.ai-onboarding-progress')?.textContent).toContain('AI guide');
   expect(invoke.mock.calls.some(([command,args])=>command==='skill_setup'&&args.request.op==='finish')).toBe(false);
+  const reminder=document.querySelector<HTMLInputElement>('[data-instruction-target="codex"]')!;expect(reminder.checked).toBe(false);reminder.checked=true;reminder.dispatchEvent(new Event('change'));
   document.getElementById('ai-install-guide')!.click();
-  await vi.waitFor(()=>expect(invoke).toHaveBeenCalledWith('skill_setup',{request:{op:'finish',targets:['agents']}}));
+  await vi.waitFor(()=>expect(invoke).toHaveBeenCalledWith('skill_setup',{request:{op:'finish',targets:['agents'],instructions:['codex']}}));
   await vi.waitFor(()=>expect(document.querySelector('.ai-guide-card')?.textContent).toContain('Installed across local projects'));
   document.getElementById('ai-onboarding-done')!.click();
   document.getElementById('ai-add-connection')!.click();
@@ -79,6 +80,7 @@ it('separates AI claims from verified effects and approves only complete request
   document.getElementById('ai-guide-next')!.click();
   await vi.waitFor(()=>expect(document.getElementById('ai-install-guide')).not.toBeNull());
   expect(document.querySelector('.ai-guide-card')?.textContent).toContain('/home/.agents/skills/branchline-git-approval/SKILL.md');
+  expect(document.querySelector('[data-instruction-target]')).toBeNull();
   document.getElementById('ai-onboarding-done')!.click();
   document.getElementById('ai-settings')!.click();
   Object.assign(p,{requestedSteps:[...p.requestedSteps,{kind:'pr.create',remote:'origin',head:'feat/test',base:'main',title:'<img src=x onerror=alert(1)>',body:'First line\nSecond line',draft:true}]});

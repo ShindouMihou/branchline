@@ -1,3 +1,4 @@
+import {bindSplitDiffScroll} from './diff-scroll';
 import {escapeHtml as e} from './html';
 import {captureAiViewport,restoreAiViewport} from './ai-viewport';
 import {parseDiff} from './diff';
@@ -54,7 +55,7 @@ export function createAiDiffReview(load:(request:object)=>Promise<AiReviewDiff>,
       observer?.disconnect();
       const viewport=document.querySelector<HTMLElement>('.ai-review-diff-code'),tracks=[...document.querySelectorAll<HTMLElement>('[data-ai-diff-scroll]')];
       const resize=()=>{if(!viewport)return;viewport.style.setProperty('--diff-viewport',`${viewport.clientWidth}px`);tracks.forEach((track,index)=>{let width=track.clientWidth;viewport.querySelectorAll<HTMLElement>(`.code-cell:nth-child(${index+1}) code`).forEach(code=>width=Math.max(width,code.scrollWidth+46));if(track.firstElementChild)(track.firstElementChild as HTMLElement).style.width=`${width}px`;});};
-      tracks.forEach((track,index)=>track.onscroll=()=>viewport?.style.setProperty(index?'--after-scroll':'--before-scroll',`${track.scrollLeft}px`));
+      if(viewport)bindSplitDiffScroll(viewport,tracks);
       if(viewport&&typeof ResizeObserver!=='undefined'){observer=new ResizeObserver(resize);observer.observe(viewport);}resize();paintTokens();
       document.getElementById('ai-diff-layout')?.addEventListener('click',()=>{split=!split;repaint();});
       document.getElementById('ai-diff-language')?.addEventListener('change',event=>{if(!selection)return;const value=(event.target as HTMLSelectElement).value;if(value==='auto')overrides.delete(selection.path);else overrides.set(selection.path,value);void highlight();repaint();});

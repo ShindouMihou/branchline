@@ -887,3 +887,16 @@ html[data-simplified="true"] .tabs { padding:0 14px; min-height:48px; }
 .appearance-update-heading h3 span { color:var(--muted); font-size:.85em; font-weight:400; }
 .appearance-update-heading button { border-color:var(--border); font-size:.85em; }
 .appearance-app-updates .app-update-preference { border:0; padding-top:0; margin-top:12px; }
+
+.instruction-setup { margin-top:20px; padding-top:18px; border-top:1px solid var(--border); }
+.instruction-setup h3 { margin:0; font-size:.95em; font-weight:500; }
+.instruction-setup h3 span { margin-left:8px; font-size:.8em; font-weight:400; }
+.instruction-setup>p { font-size:.8em; line-height:1.6; margin:8px 0 12px; }
+.instruction-target { margin-top:10px; }
+.instruction-setup label.skill-target { display:grid; grid-template-columns:20px minmax(0,1fr) 18px; align-items:center; margin:0; color:var(--text); }
+.instruction-preview { margin:10px 4px; font-size:.78em; color:var(--muted); }
+.instruction-preview summary { cursor:pointer; }
+.instruction-preview code { display:block; margin:12px 0; overflow-wrap:anywhere; }
+.instruction-preview pre { white-space:pre-wrap; overflow-wrap:anywhere; line-height:1.6; background:var(--base); padding:12px; border-radius:6px; max-height:210px; overflow:auto; }
+.instruction-remove { display:flex; align-items:center; gap:8px; flex-wrap:wrap; font-size:.8em; }
+.instruction-remove span { margin-right:auto; }

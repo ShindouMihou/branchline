@@ -8,6 +8,11 @@ use std::{
 };
 const CONTENT: &str = include_str!("../../skills/branchline-git-approval/SKILL.md");
 mod updates;
+mod instructions;
+mod instruction_actions;
+mod instruction_files;
+#[cfg(test)]
+mod instruction_tests;
 const REVISION: u64 = 3;
 const NAME: &str = "branchline-git-approval";
 #[derive(Serialize)]
@@ -29,7 +34,8 @@ pub struct Installer {
 #[serde(tag = "op", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Request {
     Status,
-    Finish { targets: Vec<String> },
+    Finish { targets: Vec<String>, #[serde(default)] instructions: Vec<String> },
+    RemoveInstructions { target: String, confirmed: bool },
     Dismiss,
 }
 fn hash(text: &str) -> String {
@@ -146,17 +152,23 @@ impl Installer {
                     .map(|(id, name, path)| self.target(id, name, path))
                     .collect::<Vec<_>>();
                 Ok(
-                    json!({"shouldPrompt":!self.data.join("skills-onboarding.json").exists()&&!targets.is_empty(),"targets":targets,"content":CONTENT,"autoUpdate":self.last_report()}),
+                    json!({"shouldPrompt":!self.data.join("skills-onboarding.json").exists()&&!targets.is_empty(),"targets":targets,"content":CONTENT,"autoUpdate":self.last_report(),"instructions":self.instruction_targets()}),
                 )
             }
             Request::Dismiss => {
                 self.remember()?;
                 Ok(json!({"dismissed":true}))
             }
-            Request::Finish { targets } => {
-                if targets.is_empty() {
+            Request::RemoveInstructions { target, confirmed } => {
+                if !confirmed { return Err("Confirm removal of the Branchline reminder first".into()); }
+                self.remove_instructions(&target)?;
+                Ok(json!({"removed":true}))
+            }
+            Request::Finish { targets, instructions } => {
+                if targets.is_empty() && instructions.is_empty() {
                     return Err("Select an AI client first".into());
                 }
+                self.validate_instruction_targets(&instructions)?;
                 let locations = self.locations();
                 let mut results = Vec::new();
                 for id in &targets {
@@ -177,6 +189,10 @@ impl Installer {
                         self.install(&folder)
                     };
                     results.push(json!({"id":id,"ok":result.is_ok(),"error":result.err()}));
+                }
+                for id in instructions {
+                    let result = self.install_instructions(&id);
+                    results.push(json!({"id":format!("instructions:{id}"),"ok":result.is_ok(),"error":result.err()}));
                 }
                 if results.iter().all(|r| r["ok"] == true) {
                     self.remember()?;
@@ -253,7 +269,7 @@ mod tests {
     #[test]
     fn installs_only_selected_target_and_keeps_custom_files() {
         let (_d, i) = setup();
-        i.handle(Request::Finish {
+        i.handle(Request::Finish { instructions: Vec::new(),
             targets: vec!["agents".into()],
         })
         .unwrap();
@@ -265,14 +281,14 @@ mod tests {
         let file = i.home.join(".agents/skills").join(NAME).join("SKILL.md");
         fs::write(&file, "custom").unwrap();
         let response = i
-            .handle(Request::Finish {
+            .handle(Request::Finish { instructions: Vec::new(),
                 targets: vec!["agents".into()],
             })
             .unwrap();
         assert_eq!(response["results"][0]["ok"], false);
         assert_eq!(fs::read_to_string(file).unwrap(), "custom");
         assert!(i
-            .handle(Request::Finish {
+            .handle(Request::Finish { instructions: Vec::new(),
                 targets: vec!["arbitrary/path".into()]
             })
             .is_err());
@@ -283,7 +299,7 @@ mod tests {
         let (_d, i) = setup();
         std::os::unix::fs::symlink(i.home.join(".claude"), i.home.join(".agents")).unwrap();
         let r = i
-            .handle(Request::Finish {
+            .handle(Request::Finish { instructions: Vec::new(),
                 targets: vec!["agents".into()],
             })
             .unwrap();
@@ -378,7 +394,7 @@ mod update_tests {
         old_guide(&folder, Some(REVISION + 1));
         assert_eq!(installer.auto_update().unwrap()["updatedCount"], 0);
         installer
-            .handle(Request::Finish {
+            .handle(Request::Finish { instructions: Vec::new(),
                 targets: vec!["agents".into()],
             })
             .unwrap();

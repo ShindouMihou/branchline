@@ -20,7 +20,7 @@ impl Installer {
             .and_then(|bytes| serde_json::from_slice::<Receipt>(&bytes).ok());
         Ok(receipt.filter(|r| r.version == 1 && r.sha256 == hash(text)))
     }
-    fn write_json(&self, path: &Path, value: &Value) -> Result<(), String> {
+    pub(super) fn write_json(&self, path: &Path, value: &Value) -> Result<(), String> {
         safe_path(&self.home, path)?;
         let parent = path.parent().ok_or("Invalid update record location")?;
         fs::create_dir_all(parent).map_err(|e| e.to_string())?;
@@ -38,10 +38,13 @@ impl Installer {
         )
     }
     pub(super) fn backup(&self, folder: &Path, text: &str) -> Result<(), String> {
+        self.backup_document("skill-backups", folder, text)
+    }
+    pub(super) fn backup_document(&self, directory: &str, folder: &Path, text: &str) -> Result<(), String> {
         let key = hash(&folder.to_string_lossy());
         let destination =
             self.data
-                .join("skill-backups")
+                .join(directory)
                 .join(format!("{}-{}.md", &key[..16], hash(text)));
         safe_path(&self.home, &destination)?;
         if destination.exists() {
@@ -112,7 +115,8 @@ impl Installer {
                 Err(error) => json!({"id":id,"status":"failed","detail":error}),
             });
         }
-        let mut report = json!({"schemaVersion":1,"revision":REVISION,"checkedAt":std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs(),"updatedCount":results.iter().filter(|r|r["status"]=="updated").count(),"attentionCount":results.iter().filter(|r|["customized","different_revision_content","failed"].contains(&r["status"].as_str().unwrap_or(""))).count(),"results":results});
+        let instruction_results = self.auto_update_instructions();
+        let mut report = json!({"schemaVersion":1,"revision":REVISION,"checkedAt":std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs(),"updatedCount":results.iter().chain(instruction_results.iter()).filter(|r|r["status"]=="updated").count(),"attentionCount":results.iter().chain(instruction_results.iter()).filter(|r|["customized","different_revision_content","failed"].contains(&r["status"].as_str().unwrap_or(""))).count(),"results":results,"instructionResults":instruction_results});
         if let Err(error) = self.write_json(&self.data.join("skill-updates.json"), &report) {
             report["recordError"] = json!(error);
         }

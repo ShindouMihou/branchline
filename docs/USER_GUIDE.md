@@ -154,3 +154,19 @@ Each app launch checks previously installed Branchline guides once in the backgr
 The updater saves the previous guide in the app-local `skill-backups` directory before replacing it atomically. A failed backup prevents replacement. Update results are recorded in `skill-updates.json` and summarized under AI Skills → Guide & install locations; failures retry on the next app launch. Existing current guides do not get rewritten on every startup. A running AI session may need to restart to load changed instructions. Updates use the guide bundled with the installed app, with no network downloads.
 
 Maintainers: increase `REVISION` in `src-tauri/src/skills.rs` whenever the bundled skill changes. Legacy hash receipts are treated as revision 1. Revision ordering prevents an older app build from downgrading a newer managed guide; differing content with the same revision is preserved for manual review.
+
+### Optional global instruction reminders
+
+AI Skills and the final connector setup step offer an unchecked, optional reminder for detected default Codex and Claude Code profiles. Preview the exact text and destination before installing: `~/.codex/AGENTS.md` for Codex and `~/.claude/CLAUDE.md` for Claude Code. The corresponding managed skill must be installed first, or selected in the same installation. Custom `CODEX_HOME` profiles and other clients’ global instruction locations are not automatically configured. Codex profiles with `AGENTS.override.md` are left for manual integration so a reminder is not added to a shadowed file.
+
+Branchline uses a separate, valid marker pair:
+
+```md
+<!-- branchline:integration:start -->
+…Branchline reminder…
+<!-- branchline:integration:end -->
+```
+
+Surrounding instructions are preserved. Branchline backs up the previous document locally and records ownership of its section. Startup updates apply only to previously opted-in, unchanged managed sections. Edited, unowned, duplicate or malformed sections stay untouched; deleted sections are not silently restored. AI Skills offers a confirmed removal action for unchanged managed sections, keeping the rest of the document.
+
+The reminder tells the AI to load the full skill before Git/GitHub changes, submit the whole command, wait for the actual result, and never treat a timeout as approval. Restart an existing AI session to load new instructions. These files provide model guidance, not enforced tool permissions; separate terminal access remains outside Branchline’s control. See [Claude Code memory](https://code.claude.com/docs/en/memory) and [Codex AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md).

@@ -1,3 +1,4 @@
+import {bindSplitDiffScroll} from './diff-scroll';
 import logoUrl from '../assets/branchline-mark.svg';
 import { invoke, isTauri } from '@tauri-apps/api/core';
 import { open } from '@tauri-apps/plugin-dialog';
@@ -111,14 +112,8 @@ function sizeDiffColumns(){
     let width=track.clientWidth;
     viewport.querySelectorAll<HTMLElement>(`.code-cell:nth-child(${index+1}) code`).forEach(code=>width=Math.max(width,code.scrollWidth+46));
     (track.firstElementChild as HTMLElement).style.width=`${width}px`;
-    track.onscroll=()=>viewport.style.setProperty(index?'--after-scroll':'--before-scroll',`${track.scrollLeft}px`);
   });
-  viewport.onwheel=event=>{
-    if(!tracks.length||(!event.deltaX&&!event.shiftKey))return;
-    const bounds=viewport.getBoundingClientRect(),track=tracks[event.clientX<bounds.left+bounds.width/2?0:1];
-    if(track.scrollWidth<=track.clientWidth)return;
-    event.preventDefault();track.scrollLeft+=event.deltaX||event.deltaY;
-  };
+  bindSplitDiffScroll(viewport,[...tracks]);
 }
 function changedLines(repo:Repo){
   const stats=repo.lineStats;
@@ -191,7 +186,7 @@ function editor() {
   return `<div class="editor-tab ${asset?'asset-file':''}">${icon('file-code-2')} <span>${esc(basename(path))}</span><small>${tab === 'history' ? esc(commit?.short) : staged ? 'Staged' : 'Working tree'}</small><button data-toggle-panel="diff" class="icon-button panel-collapse" aria-label="Collapse diff viewer" title="Collapse diff viewer">${icon('chevron-down')}</button></div>
   <div class="diff-toolbar revision-toolbar ${split?'split-head':''}"><span class="revision-from">${tab === 'history' ? 'Parent revision' : staged ? 'HEAD' : 'Index'}</span><div class="revision-to"><span>${tab === 'history' ? `Commit ${esc(commit?.short)}` : staged ? 'Staged version' : 'Working tree'}</span><div class="diff-controls">${!showImage?`<select id="syntax-language" class="syntax-language" aria-label="Syntax highlighting language" title="Auto-detect or choose a language"><option value="auto" ${!languageOverrides.has(fileKey)?'selected':''}>Auto${detectLanguage(path)?`: ${languages.find(item=>item.id===detectLanguage(path))?.name??detectLanguage(path)}`:''}</option><option value="text" ${languageOverrides.get(fileKey)==='text'?'selected':''}>Plain text</option>${languages.map(item=>`<option value="${esc(item.id)}" ${languageOverrides.get(fileKey)===item.id?'selected':''}>${esc(item.name)}</option>`).join('')}</select>`:''}<span class="diff-count">${showImage?'Image comparison':`${parsed.hunks.length} ${parsed.hunks.length===1?'hunk':'hunks'}`}</span>${!showImage?`<button id="view-mode" class="quiet-control" title="${split?'Show a unified diff':'Show changes side by side'}" aria-label="${split?'Show unified diff':'Show side-by-side diff'}">${icon(split ? 'align-left' : 'columns-2')} ${split ? 'Unified' : 'Side by side'}</button>`:''}</div></div></div>
   ${asset?`<div class="asset-view-switch" aria-label="Image display mode"><button data-asset-mode="image" aria-pressed="${showImage}">Image</button><button data-asset-mode="code" aria-pressed="${!showImage}">Code</button></div>`:''}
-  <div class="diff-content ${split&&!showImage?'split-view':''}" tabindex="0" aria-label="File diff">
+  <div class="diff-content ${split&&!showImage&&parsed.hunks.length&&diff?.untracked==null?'split-view':''}" tabindex="0" aria-label="File diff">
   ${showImage?imageComparison(diff):loadingDiff ? '<div class="diff-notice">Loading diff…</div>' : diff?.untracked != null ? `<div class="diff-notice">${esc(diff.notice)}</div><pre class="untracked" data-syntax-untracked>${esc(diff.untracked)}</pre>` : parsed.hunks.length ? renderDiffHunks(parsed.hunks,split,canHunk?index=>`<button data-hunk="${index}" ${busy?'disabled':''}>${icon(staged?'minus':'plus')} ${staged?'Unstage':'Stage'} hunk</button>`:undefined) : asset&&diff?.patch&&!oversized?`<div class="binary-source-note">Binary image · Git diff details</div><pre class="binary-diff">${esc(diff.patch)}</pre>`:`<div class="diff-notice">${esc(diff?.notice ?? (diff?.patch.includes('GIT binary patch') ? 'Binary file. Use the file action to stage or unstage.' : diff?.patch ? 'Metadata-only change. Use the file action to stage or unstage.' : 'No textual changes to display.'))}</div>`}
   </div>${split&&!showImage&&parsed.hunks.length?`<div class="diff-x-scrollbars" aria-label="Horizontal diff scrolling"><div data-diff-scroll="before" tabindex="0" aria-label="Scroll previous version horizontally"><div></div></div><div data-diff-scroll="after" tabindex="0" aria-label="Scroll new version horizontally"><div></div></div></div>`:''}`;
 }
