@@ -1,21 +1,31 @@
 ---
 name: branchline-git-approval
-description: Request Branchline approval for commits, pushes, GitHub changes, destructive Git operations, and history rewrites. Safe local work and isolated test fixtures run directly.
+description: Request approval for consequential Git and GitHub operations only, including Git effects invoked through scripts. Unrelated services use their normal tools and permissions; safe local Git work and isolated fixtures run directly.
 ---
 
-Choose the execution path by the command's effects. Task authorization is still required; this guide defines when native Branchline approval is also needed.
+## Scope first
 
-## Run directly
+Branchline is strictly the approval gate for Git and GitHub operations. Determine the actual effects before choosing a tool; a repository working directory or a remote write alone does not make a command a Git/GitHub operation.
 
-Use normal tools for read-only Git/GitHub queries, builds, and tests. Safe local-only changes can also run directly: fetch without force/pruning, staging/unstaging without moving HEAD or discarding files, stash save/apply/pop with Git's normal conflict protections, and local branch creation, rename, or switching when existing work is preserved. Inspect first when safety depends on repository state. These operations do not need a Branchline request or an available MCP connection.
+Use unrelated services' normal tools and permission mechanisms for their operations. This includes Convex environment changes, application deployments, database changes, cloud administration, and non-GitHub authentication or security changes. They stay outside Branchline even when remote, destructive, or security-sensitive. This rule grants no permission to perform them directly without their normal authorization.
 
-Tests may create commits, branches and stashes, rewrite history, and push to local bare remotes inside disposable test fixtures. Keep every effect confined to isolated fixture repositories and mock services: no real credentials, real remote services, user working repositories, or shared resources. A test or script that affects real repositories follows the approval rules below.
+Inspect scripts, aliases, hooks, and wrappers by their effects: a Node script that commits or pushes Git needs the Git approval below; a Node command that sets a Convex variable does not. If the service/effects are unknown, inspect or ask for clarification using normal tools. Branchline is not a fallback for unclassified commands.
 
-## Request Branchline approval
+## Safe Git work
 
-Use the connected MCP server for commits in real repositories; pushes and other remote writes; creating, updating, merging, closing, or otherwise changing pull requests and GitHub resources; history rewrites; deletion of branches/stashes or work; and commands that can discard or overwrite existing work. Examples include rebase, amend, reset that moves HEAD or discards files, clean, forced checkout, stash drop/clear, and force push. Changes to authentication, security settings, or publication destinations also require review.
+Read-only Git/GitHub queries, builds, tests, and safe local Git work use normal tools. Examples include fetch without force/pruning, staging/unstaging without moving HEAD or discarding files, stash save/apply/pop with normal conflict protections, and local branch creation/rename/switching that preserves existing work. Inspect repository state when safety depends on it. No Branchline connection is needed for this work.
 
-Classify scripts, aliases, hooks, and shell chains by their actual effects. If a chain contains a gated action, submit the entire unchanged chain; approval never covers only a subset. Read-only inspection can resolve uncertainty. If the effects still cannot be established as safe local work, use Branchline. Preserve any stricter explicit user or repository requirement.
+Tests may create commits, branches and stashes, rewrite history, and push to local bare remotes inside disposable fixtures. Confine every effect to isolated fixture repositories and mock services: no real credentials, real remote services, user working repositories, or shared resources. Git/GitHub effects outside those fixtures follow the approval rules below.
+
+## Gated Git/GitHub work
+
+Use Branchline for commits in real repositories, Git pushes and other Git-remote writes, GitHub resource changes (including PRs, releases and repository settings), Git history rewrites, Git branch/stash/worktree deletion, and Git operations that discard or overwrite work. Examples include rebase, amend, reset that moves HEAD or discards files, clean, forced checkout, stash drop/clear, and force push. Git/GitHub authentication, repository-security settings, and Git remote/publication-destination changes also require review. If a known Git/GitHub action cannot be established as safe local work, use Branchline. Preserve stricter explicit user or repository requirements within that scope.
+
+## Command chains
+
+Keep Git/GitHub workflow chains intact, including supporting shell setup, read-only checks, and local build/test steps. A gated Git/GitHub action requires approval of the entire unchanged chain; never approve only a subset.
+
+When composing a workflow, keep unrelated service mutations in separate normal-tool operations with their own authorization. For a user-supplied chain mixing gated Git/GitHub work with unrelated service mutations, explain the scope conflict and ask before splitting or changing it. Do not silently rewrite it or submit it wholesale as a general-purpose Branchline approval. Branchline approval cannot authorize another service's operations.
 
 ## Approval workflow
 

@@ -1,5 +1,4 @@
 .stash-workspace{display:grid;grid-template-columns:280px minmax(0,1fr);flex:1;min-width:0;min-height:0;background:var(--base)}
-.changes-stash-action{display:flex;justify-content:flex-end;padding:5px 10px 0;color:var(--muted);font-size:.9em}
 .stash-list-panel,.stash-files{display:flex;flex-direction:column;min-height:0;min-width:0;border-right:1px solid var(--border);background:var(--panel)}
 .stash-heading{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:14px 18px;min-height:64px;border-bottom:1px solid var(--border);flex-shrink:0}
 .stash-heading h2{font-size:var(--ui-font,14px);margin:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

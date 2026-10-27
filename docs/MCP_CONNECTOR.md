@@ -23,6 +23,26 @@ The guide never silently edits an AI client's configuration or runs an installat
 
 Instructions were checked against current official documentation and installed Codex/Claude CLI help. Existing host settings were not modified, and live interoperability with every listed client has not been certified.
 
+## Agent routing scope
+
+The skill, managed instruction blocks, MCP initialization guidance, tool descriptions and capabilities scope Branchline to Git/GitHub effects. They are routing guidance; the shell executor is not a static sandbox and does not prove that arbitrary scripts only affect Git. Existing AI sessions and MCP connections need to reload guidance; bundled transport changes become available with an updated app build.
+
+| Request | Intended route |
+| --- | --- |
+| Convex `env default set`, including preview deployments | Convex's normal tools and permissions |
+| Database deletion, cloud credential changes, or package publication | The service's normal tools and permissions |
+| `git status`, `gh pr view`, staging, safe stash work | Normal tools |
+| Isolated fixture tests creating commits or local bare-remote pushes | Normal tools, confined to disposable fixtures |
+| Git commit/push through Git, an alias, Node or another script | Branchline |
+| GitHub PR edits, release creation, repository-security changes | Branchline |
+| Git remote URL or Git/GitHub authentication changes | Branchline |
+| Unknown script with unknown effects | Inspect or clarify with normal tools; no automatic Branchline fallback |
+| `git status && convex env ...` | Normal tools and Convex authorization; read-only Git adds no gate |
+| `git push && local-build-check` | Whole unchanged Git workflow through Branchline |
+| User-supplied `git push && convex env ...` | Clarify separation and permissions before splitting/changing or submitting wholesale |
+
+This review addresses the previous ambiguous terms “remote writes,” “security changes,” and “deletion” by qualifying them as Git/GitHub effects. Non-Git risk remains subject to the appropriate service's authorization; it is not silently exempted. The boundary preserves safe-local and fixture exceptions, whole-command Git approval, and waiting for actual results.
+
 ## One command, one decision
 
 An AI submits the entire Git/GitHub command using `branchline_propose_command`. Branchline preserves the text and presents it for native approval. It does not split the command, remove flags, silently substitute safer commands, or approve an initial portion. The user approves the entire command or denies it, optionally giving a reason visible to the AI.

@@ -13,7 +13,7 @@ mod instruction_actions;
 mod instruction_files;
 #[cfg(test)]
 mod instruction_tests;
-const REVISION: u64 = 4;
+const REVISION: u64 = 5;
 const NAME: &str = "branchline-git-approval";
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
