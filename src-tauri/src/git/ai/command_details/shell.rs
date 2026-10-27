@@ -107,3 +107,60 @@ mod tests {
         }
     }
 }
+
+mod clauses;
+pub(super) fn preview(script: &str) -> Result<Vec<Result<Vec<String>, String>>, String> {
+    if let Ok(commands) = split(script) {
+        return Ok(commands.into_iter().map(Ok).collect());
+    }
+    let mut commands = Vec::new();
+    for clause in clauses::split(script)? {
+        match split(clause) {
+            Ok(words) => commands.extend(words.into_iter().map(Ok)),
+            Err(error) => commands.push(Err(error)),
+        }
+    }
+    Ok(commands)
+}
+
+#[cfg(test)]
+mod recovery_tests {
+    use super::*;
+    #[test]
+    fn command_substitutions_and_nested_quotes_do_not_leak_inner_commands() {
+        for expression in [
+            "\"$(printf '%s' 'fake && git push origin hidden')\"",
+            "\"$(printf '%s' \"$(printf ') && git push origin hidden')\")\"",
+            "\"${VALUE:-'fake && git push origin hidden'}\"",
+            "\"$((1 + (2 * 3)))\"",
+        ] {
+            let commands = preview(&format!("test {expression} = ready && git commit -m Actual")).unwrap();
+            assert_eq!(commands.len(), 2);
+            assert!(commands[0].is_err());
+            assert_eq!(commands[1].as_ref().unwrap(), &["git", "commit", "-m", "Actual"]);
+        }
+    }
+    #[test]
+    fn ambiguous_compound_syntax_remains_wholly_unavailable() {
+        for script in [
+            "test \"$VALUE\" && if true; then git push origin fake; fi",
+            "cat <<'EOF'\ngit push origin fake\nEOF\ngit commit -m Actual",
+            "test \"$(cat <<EOF\ngit push origin fake\nEOF\n)\" && git commit -m Actual",
+            "test \"$VALUE\" && (git push origin fake)",
+            "test \"$VALUE\" && f() { git push origin fake; }",
+            "test `echo hidden` && git push origin fake",
+            "test \"$VALUE\" | cat; git push origin fake",
+            "test \"$VALUE\" || git push origin fake",
+            "test \"$(echo unfinished\" && git push origin fake",
+            "test \"$VALUE\" & git push origin fake",
+        ] { assert!(preview(script).is_err(), "{script}"); }
+    }
+    #[test]
+    fn comments_and_continuations_do_not_create_extra_actions() {
+        let commands = preview("test \"$(printf ready # && git push origin hidden\n)\" = ready &&\\\n git commit -m 'Actual' # && git push origin hidden\n").unwrap();
+        assert_eq!(commands.len(), 2);
+        assert_eq!(commands[1].as_ref().unwrap(), &["git", "commit", "-m", "Actual"]);
+        let deeply_nested = format!("test \"{}echo ready{}\" && git push origin hidden", "$(".repeat(40), ")".repeat(40));
+        assert!(preview(&deeply_nested).is_err());
+    }
+}

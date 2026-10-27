@@ -377,13 +377,14 @@ pub fn inspect(root: &Path, steps: &[CommandStep]) -> Result<Vec<Detail>, String
     let mut details = Vec::new();
     for (command_index, step) in steps.iter().enumerate() {
         let mut context_uncertain = false;
+        let mut literal_only = false;
         let mut requested_directory = None;
         let commands = if step.program == "shell" {
             match step
                 .argv
                 .get(1)
                 .ok_or_else(|| "Shell text is missing.".to_string())
-                .and_then(|script| shell::split(script))
+                .and_then(|script| shell::preview(script))
             {
                 Ok(commands) => commands,
                 Err(error) => {
@@ -394,11 +395,26 @@ pub fn inspect(root: &Path, steps: &[CommandStep]) -> Result<Vec<Detail>, String
                 }
             }
         } else {
-            vec![std::iter::once(step.program.clone())
+            vec![Ok(std::iter::once(step.program.clone())
                 .chain(step.argv.clone())
-                .collect()]
+                .collect())]
         };
         for words in commands {
+            let words = match words {
+                Ok(words) => words,
+                Err(error) => {
+                    details.push(Detail::unavailable(command_index, &error));
+                    state.branch = None;
+                    state.staged.clear();
+                    state.projected.clear();
+                    state.projected_scope_uncertain = true;
+                    state.index_uncertain = true;
+                    state.previous = true;
+                    requested_directory = None;
+                    literal_only = true;
+                    continue;
+                }
+            };
             let words = literal::identity_command(&words).unwrap_or(words);
             if let [program, path] = words.as_slice() {
                 if program == "cd" && Path::new(path).is_absolute() {
@@ -412,7 +428,7 @@ pub fn inspect(root: &Path, steps: &[CommandStep]) -> Result<Vec<Detail>, String
             }
             let literal_context = context_uncertain && requested_directory.is_some();
             let git_override = matches!(words.as_slice(),[program,option,..] if program=="git"&&option.starts_with('-'));
-            let mut detail = if literal_context || literal::special(&words) {
+            let mut detail = if literal_only || literal_context || literal::special(&words) {
                 literal::inspect(&words, command_index, &mut state).unwrap_or_else(|| {
                     requested_directory = None;
                     Detail::unavailable(
@@ -460,6 +476,10 @@ pub fn inspect(root: &Path, steps: &[CommandStep]) -> Result<Vec<Detail>, String
             if detail.working_directory.is_none() {
                 detail.working_directory = requested_directory.clone();
             }
+            if literal_only {
+                detail.warnings.push("An earlier expression needs runtime interpretation. Only later literal arguments are shown; working directory, branch, file selection and results are unknown.".into());
+                detail.evidence_kind = "unknown".into();
+            }
             if literal_context {
                 detail.warnings.push("Directory and command arguments are requested values. Directory changes, command success, file selection and repository state are not verified here.".into());
             }
@@ -492,6 +512,15 @@ pub fn inspect(root: &Path, steps: &[CommandStep]) -> Result<Vec<Detail>, String
 
 #[cfg(test)]
 mod tests;
+
+pub(super) fn argument_commands(step: &CommandStep) -> Vec<Vec<String>> {
+    if step.program == "shell" {
+        step.argv.get(1).and_then(|script| shell::preview(script).ok())
+            .unwrap_or_default().into_iter().filter_map(Result::ok).collect()
+    } else {
+        literal_commands(step).unwrap_or_default()
+    }
+}
 
 pub(super) fn literal_commands(step: &CommandStep) -> Option<Vec<Vec<String>>> {
     if step.program == "shell" {

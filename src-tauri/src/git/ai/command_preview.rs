@@ -13,14 +13,15 @@ pub(super) fn command_preview(root: &Path, steps: &[Step]) -> Result<Preview, St
         detail: "These commands run with your account's permissions. They may change files, history, GitHub settings, or other repositories and may invoke configured hooks, aliases, extensions, and helpers. Branchline checks process outcomes, not their complete effects. Review every argument and input.".into(),
     }];
     let groups = commands.iter().filter_map(command_details::literal_commands).flatten().collect::<Vec<_>>();
-    let pushes = groups.iter().filter(|words| words.first().is_some_and(|p| p == "git") && words.get(1).is_some_and(|p| p == "push")).collect::<Vec<_>>();
+    let arguments = commands.iter().flat_map(command_details::argument_commands).collect::<Vec<_>>();
+    let pushes = arguments.iter().filter(|words| words.first().is_some_and(|p| p == "git") && words.get(1).is_some_and(|p| p == "push")).collect::<Vec<_>>();
     if pushes.iter().any(|words| words.iter().skip(2).any(|arg| {
         let destination = arg.rsplit(':').next().unwrap_or(arg).trim_start_matches('+').trim_start_matches("refs/heads/");
         matches!(destination, "main" | "master")
     })) {
         risks.push(RiskFlag { code: "primary_branch_argument".into(), title: "Pushing to a primary branch".into(), detail: "A push names main or master as its destination. Review the whole command carefully; this may update a shared primary branch.".into() });
     }
-    if groups.iter().any(|words| words.iter().skip(1).any(|arg| matches!(arg.as_str(), "--force" | "-f" | "--hard" | "--mirror" | "--delete" | "delete") || arg.starts_with("--force-with-lease"))) {
+    if arguments.iter().any(|words| words.iter().skip(1).any(|arg| matches!(arg.as_str(), "--force" | "-f" | "--hard" | "--mirror" | "--delete" | "delete") || arg.starts_with("--force-with-lease"))) {
         risks.push(RiskFlag { code: "destructive_command_argument".into(), title: "Potentially destructive command".into(), detail: "The request includes force, deletion, mirror, or hard-reset arguments. Completed effects may be irreversible.".into() });
     }
     let mut source = txt(root, &["symbolic-ref", "--quiet", "--short", "HEAD"]).ok();
@@ -73,5 +74,20 @@ mod tests {
         let inspect = |script: &str| command_preview(dir.path(), &[Step::Command { program: "shell".into(), argv: vec!["-c".into(), script.into()], stdin: None, timeout_seconds: None }]).unwrap();
         assert!(!inspect("git push origin HEAD:feat/test && gh pr create --base main --head feat/test --title Title --body Description").risks.iter().any(|risk| risk.code == "primary_branch_argument"));
         assert!(inspect("git push origin HEAD:refs/heads/main").risks.iter().any(|risk| risk.code == "primary_branch_argument"));
+    }
+}
+
+#[cfg(test)]
+mod recovery_tests {
+    use super::*;
+    #[test]
+    fn dynamic_checks_do_not_hide_later_literal_primary_branch_arguments() {
+        let root = tempfile::tempdir().unwrap();
+        assert!(std::process::Command::new("git").args(["init", "-q", "-b", "main"]).current_dir(root.path()).status().unwrap().success());
+        let inspect = |script: &str| command_preview(root.path(), &[Step::Command { program: "shell".into(), argv: vec!["-c".into(), script.into()], stdin: None, timeout_seconds: None }]).unwrap();
+        let preview = inspect("test \"$(git rev-parse HEAD)\" = expected && git commit -m Release && git push --atomic origin main");
+        assert!(preview.risks.iter().any(|risk| risk.code == "primary_branch_argument"));
+        assert!(preview.command_details.iter().any(|detail| detail.message.as_deref() == Some("Release")));
+        assert!(!inspect("test \"$(printf '%s' 'git push origin main')\" = expected && git push origin feat/test").risks.iter().any(|risk| risk.code == "primary_branch_argument"));
     }
 }

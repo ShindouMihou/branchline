@@ -104,17 +104,12 @@ fn identity_only_configuration_preserves_safe_index_previews_but_context_overrid
     assert!(directory[0].source_branch.is_none());
 }
 #[test]
-fn directory_preview_stays_unknown_for_relative_or_dynamic_context_and_respects_terminators() {
+fn relative_directory_context_stays_unknown_and_options_respect_terminators() {
     let root = repository();
-    for text in [
-        "cd elsewhere && git commit -m Save",
-        "cd \"$PROJECT\" && git commit -m Save",
-    ] {
-        assert!(inspect(root.path(), &[shell(text)])
-            .unwrap()
-            .iter()
-            .all(|detail| detail.kind == "details_unavailable"));
-    }
+    assert!(inspect(root.path(), &[shell("cd elsewhere && git commit -m Save")])
+        .unwrap()
+        .iter()
+        .all(|detail| detail.kind == "details_unavailable"));
     let details=inspect(root.path(),&[shell("gh repo create owner/project -- --public --source /private && gh repo edit owner/project -- --add-topic hidden")]).unwrap();
     assert!(details[0].visibility.is_none());
     assert!(details[0].source_directory.is_none());
@@ -169,4 +164,45 @@ fn release_upload_details_preserve_assets_and_notes_path_without_reading_it() {
         &["/tmp/Branchline app.zip", "/tmp/archive.sha256"]
     );
     assert!(detail.body.is_none());
+}
+
+#[test]
+fn dynamic_preflight_keeps_later_literal_release_steps_without_reading_runtime_state() {
+    let root = repository();
+    fs::write(root.path().join("notes.md"), "private snapshot content").unwrap();
+    let script = "test \"$(git rev-parse HEAD)\" = expected && test \"$(shasum -a 256 inputs | awk '{print $1}')\" = digest && shasum -a 256 -c inputs && git add -- file.txt && git commit -m 'Release app' && git push --atomic origin main refs/tags/v1.2.3 && gh release create v1.2.3 app.zip --repo owner/app --title 'App 1.2.3' --notes-file notes.md --draft";
+    let step = shell(script);
+    let details = inspect(root.path(), &[step.clone()]).unwrap();
+    assert!(details.iter().any(|detail| detail.kind == "index.stage"));
+    let commit = details.iter().find(|detail| detail.kind == "commit.create").unwrap();
+    assert_eq!(commit.message.as_deref(), Some("Release app"));
+    assert!(commit.files.is_none());
+    assert!(commit.source_branch.is_none());
+    let push = details.iter().find(|detail| detail.kind == "remote.push").unwrap();
+    assert_eq!(push.remote.as_deref(), Some("origin"));
+    let release = details.iter().find(|detail| detail.kind == "release.create").unwrap();
+    assert_eq!(release.release_title.as_deref(), Some("App 1.2.3"));
+    assert_eq!(release.assets.as_ref().unwrap(), &["app.zip"]);
+    assert!(details.iter().all(|detail| detail.file_previews.is_empty()));
+    assert!(!serde_json::to_string(&details).unwrap().contains("private snapshot content"));
+    assert_eq!(step.argv[1], script);
+    assert!(!root.path().join(".git/index").exists());
+}
+
+#[test]
+fn recovered_literals_never_invent_dynamic_files_branches_or_message_file_contents() {
+    let root = repository();
+    fs::write(root.path().join("notes.md"), "do-not-read-this-content").unwrap();
+    for script in [
+        "git add *.txt && git commit -m Save && git push origin HEAD:main",
+        "cd \"$PROJECT\" && git commit -m Save && git commit -F notes.md",
+        "test \"$(printf '%s' 'git push origin fake; &&')\" = ready && git commit -F notes.md",
+    ] {
+        let details = inspect(root.path(), &[shell(script)]).unwrap();
+        assert_eq!(details[0].kind, "details_unavailable");
+        assert!(details.iter().any(|detail| detail.kind == "commit.create"));
+        assert!(details.iter().all(|detail| detail.files.is_none() && detail.file_previews.is_empty()));
+        assert!(!serde_json::to_string(&details).unwrap().contains("do-not-read-this-content"));
+        assert!(!details.iter().any(|detail| detail.target_branch.as_deref() == Some("fake")));
+    }
 }

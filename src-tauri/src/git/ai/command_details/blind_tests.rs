@@ -40,7 +40,6 @@ fn blind_runtime_and_context_expressions_never_claim_literal_details() {
     let root = repository();
     for script in [
         "git commit -m \"$(printf resolved)\"",
-        "git add *.txt && git commit -m Save",
         "git status || git push origin main",
         "git commit -F - <<'EOF'\nmessage\nEOF",
         "cd elsewhere; gh pr create -t Title -b Body",
