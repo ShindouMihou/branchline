@@ -170,3 +170,9 @@ Branchline uses a separate, valid marker pair:
 Surrounding instructions are preserved. Branchline backs up the previous document locally and records ownership of its section. Startup updates apply only to previously opted-in, unchanged managed sections. Edited, unowned, duplicate or malformed sections stay untouched; deleted sections are not silently restored. AI Skills offers a confirmed removal action for unchanged managed sections, keeping the rest of the document.
 
 The reminder tells the AI to load the full skill before Git/GitHub changes, submit the whole command, wait for the actual result, and never treat a timeout as approval. Restart an existing AI session to load new instructions. These files provide model guidance, not enforced tool permissions; separate terminal access remains outside Branchline’s control. See [Claude Code memory](https://code.claude.com/docs/en/memory) and [Codex AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
+
+### AI request alerts
+
+Connections has separate controls for **Open Branchline for review requests** and **Native notifications**, both enabled by default. A new review can bring its repository window forward and send a generic OS notification. Turning off automatic focus keeps notifications available; turning off both keeps reviews in the inbox without raising the app. Duplicate review submissions for one request do not produce repeated alerts.
+
+Clicking a notification opens the matching request and repository window. It never approves or runs commands. Notification text does not include command contents, repository names, paths, or source text. Banner visibility, Focus/Do Not Disturb, and notification permissions are controlled by the operating system. On macOS, check System Settings → Notifications → Branchline if banners are disabled.

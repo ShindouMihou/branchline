@@ -189,3 +189,27 @@ fn public_connector_has_one_exact_command_proposal_mode() {
 #[cfg(test)]
 mod blind_workflow_tests;
 mod activity_tests;
+
+#[test]
+fn native_alert_dispatch_preserves_each_new_review_and_independent_preferences() {
+    let (_dir, broker, credential, _repo) = fixture();
+    let hits = Arc::new(Mutex::new(Vec::new()));
+    let captured = hits.clone();
+    broker.lock().unwrap().set_notifier(Arc::new(move |id| {
+        captured.lock().unwrap().push(id.to_string());
+    }));
+    Broker::native(&broker, Native::AutoOpen { enabled: false }).unwrap();
+    let first = propose(&broker, &credential, "first-alert", &[&["status", "--short"]]);
+    let second = propose(&broker, &credential, "second-alert", &[&["status", "--short"]]);
+    assert_eq!(hits.lock().unwrap().as_slice(), &[first["id"].as_str().unwrap(), second["id"].as_str().unwrap()]);
+    assert!(broker.lock().unwrap().native_status(None)["focusPlanId"].is_null());
+    assert_eq!(broker.lock().unwrap().review_alert_options(second["id"].as_str().unwrap()), Some((false, true)));
+    broker.lock().unwrap().tool(&credential, "branchline_request_review", json!({"planId":second["id"]})).unwrap();
+    assert_eq!(hits.lock().unwrap().len(), 2);
+    Broker::native(&broker, Native::Notifications { enabled: false }).unwrap();
+    propose(&broker, &credential, "quiet-alert", &[&["status", "--short"]]);
+    assert_eq!(hits.lock().unwrap().len(), 2);
+    let policy: Value = serde_json::from_slice(&fs::read(broker.lock().unwrap().dir.join("launch-policy.json")).unwrap()).unwrap();
+    assert_eq!(policy["notifications"], false);
+    assert!(broker.lock().unwrap().journal.plans.iter().all(|plan| plan.approval.is_none() && plan.execution.iter().all(|step| step.commands.is_empty())));
+}

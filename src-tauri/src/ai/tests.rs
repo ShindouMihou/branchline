@@ -536,6 +536,7 @@ fn old_repository_connections_migrate_to_global_scopes_and_prompt_only_once() {
         p["id"]
     );
     Broker::native(&b, Native::AutoOpen { enabled: false }).unwrap();
+    Broker::native(&b, Native::Notifications { enabled: false }).unwrap();
     let p = proposed(&b, &c, "quiet", false);
     review(&b, &c, &p);
     assert_eq!(count.load(std::sync::atomic::Ordering::SeqCst), 1);

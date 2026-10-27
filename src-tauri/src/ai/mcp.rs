@@ -197,12 +197,14 @@ fn connect_or_open(credential: &Credential) -> Result<UnixStream, String> {
         &fs::read(policy).map_err(|_| "Open Branchline manually to enable request prompts")?,
     )
     .map_err(|_| "Invalid launch policy")?;
-    if policy["enabled"] != true
-        || policy["autoOpen"] != true
-        || !policy["activeClientIds"].as_array().is_some_and(|ids| {
-            ids.iter()
-                .any(|id| id.as_str() == Some(&credential.client_id))
-        })
+    if !super::review_signals::launch_allowed(
+        policy["enabled"] == true,
+        policy["autoOpen"] == true,
+        policy["notifications"] == true,
+        policy["activeClientIds"].as_array().is_some_and(|ids| {
+            ids.iter().any(|id| id.as_str() == Some(&credential.client_id))
+        }),
+    )
     {
         return Err("Automatic opening is disabled or this connection was revoked. Open Branchline manually.".into());
     }

@@ -1,6 +1,7 @@
 //! The native broker is the only approval authority. MCP can never call `native`.
 pub mod mcp;
 mod wait;
+mod review_signals;
 use crate::git::{
     self,
     ai::{Preview, Step},
@@ -225,6 +226,8 @@ struct Journal {
     enabled: bool,
     #[serde(default = "yes")]
     auto_open: bool,
+    #[serde(default = "yes")]
+    notifications: bool,
     clients: Vec<Client>,
     plans: Vec<Plan>,
 }
@@ -242,7 +245,6 @@ pub struct Broker {
     pub operation_gate: Arc<Mutex<()>>,
     notifier: Option<Arc<dyn Fn(&str) + Send + Sync>>,
     focus_plan: Option<String>,
-    last_raise: u64,
 }
 pub type Shared = Arc<Mutex<Broker>>;
 #[derive(Deserialize)]
@@ -292,6 +294,9 @@ pub enum Native {
         client_id: String,
     },
     AutoOpen {
+        enabled: bool,
+    },
+    Notifications {
         enabled: bool,
     },
     ReviewDiff {
@@ -402,6 +407,7 @@ impl Broker {
             Journal {
                 schema_version: JOURNAL_SCHEMA,
                 auto_open: true,
+                notifications: true,
                 ..Default::default()
             }
         };
@@ -421,7 +427,6 @@ impl Broker {
             operation_gate: Arc::new(Mutex::new(())),
             notifier: None,
             focus_plan: None,
-            last_raise: 0,
         }));
         broker.lock().map_err(|_| "Connector unavailable")?.save()?;
         let shared = broker.clone();
@@ -447,7 +452,7 @@ impl Broker {
         persist(&self.dir.join("journal-v1.json"), &self.journal)?;
         persist(
             &self.dir.join("launch-policy.json"),
-            &json!({"enabled":self.journal.enabled,"autoOpen":self.journal.auto_open,"activeClientIds":self.journal.clients.iter().filter(|c|c.active).map(|c|&c.id).collect::<Vec<_>>()}),
+            &json!({"enabled":self.journal.enabled,"autoOpen":self.journal.auto_open,"notifications":self.journal.notifications,"activeClientIds":self.journal.clients.iter().filter(|c|c.active).map(|c|&c.id).collect::<Vec<_>>()}),
         )
     }
     pub fn review_repository(&self, id: &str) -> Option<String> {
@@ -456,6 +461,13 @@ impl Broker {
             .iter()
             .find(|p| p.id == id)
             .map(|p| p.repository.clone())
+    }
+    pub fn review_alert_options(&self, id: &str) -> Option<(bool, bool)> {
+        self.journal.plans.iter().find(|plan| plan.id == id
+            && matches!(plan.status.as_str(), "pending_review" | "blocked")
+            && self.journal.enabled
+            && self.journal.clients.iter().any(|client| client.id == plan.client_id && client.active))
+            .map(|_| (self.journal.auto_open, self.journal.notifications))
     }
     fn plan_mut(&mut self, id: &str) -> Result<&mut Plan, String> {
         self.journal
@@ -491,7 +503,7 @@ impl Broker {
     }
     fn native_status(&self, selected: Option<&str>) -> Value {
         let clients=self.journal.clients.iter().map(|c|json!({"id":c.id,"name":c.name,"repositories":c.repositories,"readSource":c.read_source,"provider":c.provider,"active":c.active,"createdAt":c.created_at})).collect::<Vec<_>>();
-        json!({"schemaVersion":SCHEMA,"enabled":self.journal.enabled,"autoOpen":self.journal.auto_open,"focusPlanId":self.focus_plan,"clients":clients,"plans":self.journal.plans.iter().rev().map(|p|{let mut v=Self::redacted(p,false); if selected!=Some(p.id.as_str()){v["preview"]=Value::Null; v["execution"]=json!([]);v["events"]=json!([]);} v}).collect::<Vec<_>>(),"selectedPlan":selected.and_then(|id|self.journal.plans.iter().find(|p|p.id==id)),"pending":self.journal.plans.iter().filter(|p|p.status=="pending_review").count()})
+        json!({"schemaVersion":SCHEMA,"enabled":self.journal.enabled,"autoOpen":self.journal.auto_open,"notifications":self.journal.notifications,"focusPlanId":self.focus_plan,"clients":clients,"plans":self.journal.plans.iter().rev().map(|p|{let mut v=Self::redacted(p,false); if selected!=Some(p.id.as_str()){v["preview"]=Value::Null; v["execution"]=json!([]);v["events"]=json!([]);} v}).collect::<Vec<_>>(),"selectedPlan":selected.and_then(|id|self.journal.plans.iter().find(|p|p.id==id)),"pending":self.journal.plans.iter().filter(|p|p.status=="pending_review").count()})
     }
     pub fn set_notifier(&mut self, notify: Arc<dyn Fn(&str) + Send + Sync>) {
         self.notifier = Some(notify)
@@ -581,6 +593,9 @@ impl Broker {
             }
             Native::AutoOpen { enabled } => {
                 b.journal.auto_open = enabled;
+            }
+            Native::Notifications { enabled } => {
+                b.journal.notifications = enabled;
             }
             Native::Configuration { client_id } => return b.configuration(&client_id),
             Native::GrantRepository {
@@ -1196,11 +1211,10 @@ impl Broker {
                 }
                 if notify && self.journal.auto_open {
                     self.focus_plan = Some(id.to_string());
-                    if now().saturating_sub(self.last_raise) >= 10 {
-                        self.last_raise = now();
-                        if let Some(notify) = &self.notifier {
-                            notify(id)
-                        }
+                }
+                if review_signals::should_dispatch(notify, self.journal.auto_open, self.journal.notifications) {
+                    if let Some(notify) = &self.notifier {
+                        notify(id)
                     }
                 }
                 Ok(result)

@@ -42,6 +42,9 @@ it('separates AI claims from verified effects and approves only complete request
   expect((document.getElementById('ai-approve') as HTMLButtonElement).disabled).toBe(false);
   document.getElementById('ai-settings')!.click();
   expect((document.getElementById('ai-auto-open') as HTMLInputElement).checked).toBe(true);
+  const notifications=document.getElementById('ai-notifications') as HTMLInputElement;expect(notifications.checked).toBe(true);notifications.checked=false;notifications.dispatchEvent(new Event('change'));
+  await vi.waitFor(()=>expect(invoke).toHaveBeenCalledWith('ai_request',{request:{op:'notifications',enabled:false}}));
+  await vi.waitFor(()=>expect((document.getElementById('ai-requests') as HTMLButtonElement).disabled).toBe(false));
   expect(document.querySelector('.ai-supported')).toBeNull();
   expect(document.querySelector('.ai-header #ai-skills')).toBeNull();
   expect(document.querySelector('.ai-skills-settings #ai-skills')).not.toBeNull();
@@ -193,4 +196,17 @@ it('shows an exact shell chain verbatim as one approval request',async()=>{
   expect(document.getElementById('ai-cancel')?.textContent).toBe('Stop after command');
   expect(document.getElementById('ai-cancel')?.title).toContain('An active shell chain continues as one command');
   window.dispatchEvent(new Event('pagehide'));
+});
+
+it('reopens a dismissed review when the native window explicitly routes the same request again',async()=>{
+ const p={id:'focus-again',digest:'digest',clientName:'AI',reportedAi:null,repository:'/repo',status:'pending_review',createdAt:1,issue:null,explanation:{summary:'Review status',reason:'Inspect repository',impact:'Read status',uncertainties:[]},requestedSteps:[{kind:'command.execute',program:'shell',argv:['-c','git status --short']}],preview:{branch:'main',files:[],patch:'',warnings:[],risks:[],push:null},approval:null,execution:[],events:[]};
+ invoke.mockImplementation(async(_command,{request})=>({enabled:true,pending:1,focusPlanId:p.id,clients:[],plans:[p],selectedPlan:request.plan_id?p:null}));
+ let ui:ReturnType<typeof createAiWorkspace>;const paint=()=>{document.body.innerHTML=ui.toolbar()+ui.render();ui.bind()};
+ ui=createAiWorkspace({render:paint,root:()=>'/repo'});paint();ui.start();
+ await vi.waitFor(()=>expect(document.getElementById('ai-close')).not.toBeNull());
+ document.getElementById('ai-close')!.click();expect(document.querySelector('.ai-modal')).toBeNull();
+ const {listen}=await import('@tauri-apps/api/event');const listener=[...vi.mocked(listen).mock.calls].reverse().find(call=>call[0]==='ai-review-requested')?.[1];
+ expect(listener).toBeDefined();listener!({event:'ai-review-requested',id:1,payload:p.id});
+ await vi.waitFor(()=>expect(document.querySelector('.ai-request-heading')?.textContent).toContain('Review status'));
+ window.dispatchEvent(new Event('pagehide'));
 });

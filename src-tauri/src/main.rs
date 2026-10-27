@@ -3,6 +3,7 @@ mod ai;
 mod git;
 mod skills;
 mod windows;
+mod review_attention;
 mod updates;
 use std::sync::Arc;
 use tauri::{Emitter, Manager};
@@ -12,8 +13,14 @@ fn frontend_ready(
     state: tauri::State<'_, windows::Windows>,
 ) -> Result<(), String> {
     if state.ready(window.label())? {
-        window.show().map_err(|e| e.to_string())?;
-        let _ = window.set_focus();
+        let handle = window.app_handle().clone();
+        let label = window.label().to_string();
+        let app = handle.clone();
+        handle.run_on_main_thread(move || {
+            if let Err(error) = windows::reveal(&app, &label) {
+                eprintln!("Could not reveal the ready window: {error}");
+            }
+        }).map_err(|error| error.to_string())?;
     }
     Ok(())
 }
@@ -227,6 +234,8 @@ fn main() {
     }
     tauri::Builder::default()
         .manage(windows::Windows::new(!background))
+        .manage(review_attention::Attention::default())
+        .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_updater::Builder::new().build())
@@ -263,20 +272,7 @@ fn main() {
                         let app = handle.clone();
                         let plan_id = id.to_string();
                         let _ = handle.run_on_main_thread(move || {
-                            let root =
-                                app.state::<Connector>().0.as_ref().ok().and_then(|broker| {
-                                    broker
-                                        .lock()
-                                        .ok()
-                                        .and_then(|b| b.review_repository(&plan_id))
-                                });
-                            if let Ok(label) =
-                                app.state::<windows::Windows>().route(&app, root, &plan_id)
-                            {
-                                if let Some(window) = app.get_webview_window(&label) {
-                                    let _ = window.emit("ai-review-requested", &plan_id);
-                                }
-                            }
+                            review_attention::dispatch(&app, &plan_id);
                         });
                     }));
                 }
@@ -292,6 +288,9 @@ fn main() {
             let gate = broker.as_ref().ok().and_then(|broker| broker.lock().ok().map(|broker| broker.operation_gate.clone())).unwrap_or_default();
             app.manage(updates::Updates::new(app.path().app_local_data_dir()?.join("updates.json"), gate));
             app.manage(Connector(broker));
+            if let Err(error) = review_attention::install(app.handle()) {
+                eprintln!("Could not initialize notification clicks: {error}");
+            }
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![

@@ -2,7 +2,7 @@ use super::*;
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 #[test]
-fn gate_cycle_01_only_review_requests_raise_the_prompt() {
+fn gate_cycle_01_only_reviews_alert_and_focus_respects_independent_preferences() {
     let (_dir,broker,credential,repo)=fixture();
     let raised=Arc::new(AtomicUsize::new(0));
     let count=raised.clone();
@@ -15,8 +15,13 @@ fn gate_cycle_01_only_review_requests_raise_the_prompt() {
     for _ in 0..3 {mcp::forward(&credential,"branchline_request_review",json!({"planId":plan["id"]})).unwrap();}
     assert_eq!(raised.load(Ordering::SeqCst),1);
     Broker::native(&broker,Native::AutoOpen {enabled:false}).unwrap();
-    propose(&broker,&credential,&repo,"focus-disabled","git status --short");
-    assert_eq!(raised.load(Ordering::SeqCst),1);
+    let background = propose(&broker,&credential,&repo,"focus-disabled","git status --short");
+    assert_eq!(raised.load(Ordering::SeqCst),2);
+    assert_ne!(broker.lock().unwrap().native_status(None)["focusPlanId"], background["id"]);
+    assert_eq!(broker.lock().unwrap().review_alert_options(background["id"].as_str().unwrap()), Some((false, true)));
+    Broker::native(&broker,Native::Notifications {enabled:false}).unwrap();
+    propose(&broker,&credential,&repo,"all-alerts-disabled","git status --short");
+    assert_eq!(raised.load(Ordering::SeqCst),2);
     assert!(!repo.join(".git/index").exists());
 }
 

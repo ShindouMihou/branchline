@@ -122,11 +122,7 @@ impl Windows {
             s.ready
         };
         if ready {
-            if let Some(window) = app.get_webview_window(&label) {
-                let _ = window.unminimize();
-                let _ = window.show();
-                let _ = window.set_focus();
-            }
+            reveal(app, &label)?;
         }
         Ok(label)
     }
@@ -151,15 +147,26 @@ impl Windows {
             })
         };
         if let Some((label, true)) = target {
-            if let Some(window) = app.get_webview_window(&label) {
-                let _ = window.unminimize();
-                let _ = window.show();
-                let _ = window.set_focus();
+            if let Err(error) = reveal(app, &label) {
+                eprintln!("Could not reopen the repository window: {error}");
             }
         } else if target.is_none() {
             let _ = self.create(app, None);
         }
     }
+}
+pub fn reveal(app: &tauri::AppHandle, label: &str) -> Result<(), String> {
+    let window = app.get_webview_window(label).ok_or("Window closed")?;
+    #[cfg(target_os = "macos")]
+    app.show().map_err(|error| error.to_string())?;
+    window.unminimize().map_err(|error| error.to_string())?;
+    window.show().map_err(|error| error.to_string())?;
+    #[cfg(target_os = "macos")]
+    if let Some(main_thread) = objc2::MainThreadMarker::new() {
+        #[allow(deprecated)]
+        objc2_app_kit::NSApplication::sharedApplication(main_thread).activateIgnoringOtherApps(true);
+    }
+    window.set_focus().map_err(|error| error.to_string())
 }
 fn build(app: &tauri::AppHandle, label: &str) -> Result<(), String> {
     tauri::WebviewWindowBuilder::new(app, label, tauri::WebviewUrl::App("index.html".into()))
