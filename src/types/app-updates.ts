@@ -9,3 +9,5 @@ export interface AppUpdateState {
   lastCheckedAt: number|null;
   error: string|null;
 }
+
+export type AppUpdateRequest = {op:'status'} | {op:'check';manual:boolean} | {op:'preferences';automatic:boolean} | {op:'install';version:string};

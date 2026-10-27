@@ -227,3 +227,10 @@ Public repository, context previews and installer (2026-10-27):
 - Local validation: 158 Rust tests, 60 frontend tests, two release-manifest checks, and successful creation of the signed updater artifact set. Verified the archive against the embedded public key and rejected a modified archive in an isolated verifier. Live upgrade/restart has not been exercised against a published updater-enabled release; no published release was modified.
 
 - Updater dialog polish: scoped form layout prevents the general modal label/input rules from stacking the switch; status/version/settings/actions use compact rows. Verified error and available-update layouts at 16 px and 18 px interface sizes.
+
+
+## Update prompt visibility follow-up
+
+- A manual or menu check stays nonmodal while checking, when current, or when unavailable. Only an available candidate can open the update dialog. Automatic-check preferences remain accessible directly in Appearance.
+- Regression coverage includes no-update/failure results, explicit discovery of a new release, and unrelated cross-window events during a manual check. Frontend suite: 63 tests passing.
+- Published 0.4.3 remains unchanged; this follow-up ships in 0.4.4.

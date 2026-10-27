@@ -1,6 +1,6 @@
 # In-app updates
 
-Branchline checks for updates at startup and at most once every six hours while running. Checks are global across repository windows and do not download or install automatically. Users can disable automatic checks in Appearance → App updates, or check manually using Branchline → Check for Updates….
+Branchline checks for updates at startup and at most once every six hours while running. Checks are global across repository windows and do not download or install automatically. Users can disable automatic checks directly in Appearance → App updates, or check manually using Branchline → Check for Updates…. Checks open a prompt only when an update is available. An up-to-date result or check error uses a nonmodal status message.
 
 When an update is available, a small App update button opens its version and release notes. Install & restart downloads the signed archive, verifies it, replaces the current application using Tauri's updater, and restarts. All Branchline windows close. Installation is refused while a Git operation or an approved AI command is active. Commit drafts remain in local storage; pending approvals remain in the connector's journal.
 

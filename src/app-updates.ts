@@ -1,41 +1,63 @@
 import {invoke,isTauri} from '@tauri-apps/api/core';
 import {listen} from '@tauri-apps/api/event';
 import {escapeHtml as e} from './html';
-import {renderAppUpdates} from './app-update-view';
-import type {AppUpdateState} from './types/app-updates';
+import {renderAppUpdates,renderAppUpdateSettings} from './app-update-view';
+import type {AppUpdateState,AppUpdateRequest} from './types/app-updates';
 
-export function createAppUpdates(render:()=>void,beforeOpen:()=>void=()=>{}) {
+export function createAppUpdates(render:()=>void,beforeOpen:()=>void=()=>{},notify:(message:string,failed:boolean)=>void=()=>{}) {
   let state:AppUpdateState={revision:0,currentVersion:'',automatic:true,phase:'idle',available:null,downloaded:0,total:null,lastCheckedAt:null,error:null};
   let open=false,started=false,saving=false;
+  let pendingCheck:number|null=null;
+  let manualCheckStarted=false;
   let origin:HTMLElement|null=null;
   const busy=()=>['checking','downloading','installing'].includes(state.phase);
-  const apply=(next:AppUpdateState)=>{if(next.revision<state.revision)return;state=next;render();};
-  const call=async(request:object)=>{
-    try {apply(await invoke<AppUpdateState>('app_update',{request}));}
-    catch(error){state={...state,phase:'error',error:String(error)};render();}
+  function finishManualCheck() {
+    if(pendingCheck===null||state.phase==='checking')return;
+    pendingCheck=null;
+    if(state.available)show();
+    else notify(state.error??'Branchline is up to date.',!!state.error);
+  }
+  const apply=(next:AppUpdateState)=>{
+    if(next.revision<state.revision)return;
+    state=next;
+    if(!state.available)open=false;
+    if(pendingCheck!==null&&state.phase==='checking')manualCheckStarted=true;
+    if(pendingCheck!==null&&manualCheckStarted&&next.revision>pendingCheck)finishManualCheck();
+    render();
   };
-  const show=(check=false)=>{
+  const call=async(request:AppUpdateRequest)=>{
+    try {apply(await invoke<AppUpdateState>('app_update',{request}));}
+    catch(error){apply({...state,phase:'error',error:String(error)});}
+    if(request.op==='check'&&request.manual)finishManualCheck();
+  };
+  function show(check=false) {
+    if(check){
+      if(['downloading','installing'].includes(state.phase)&&state.available){show();return;}
+      pendingCheck=state.revision;
+      manualCheckStarted=state.phase==='checking';
+      void call({op:'check',manual:true});
+      return;
+    }
+    if(!state.available)return;
     if(!open)origin=document.activeElement instanceof HTMLElement?document.activeElement:null;
     beforeOpen();open=true;render();
     document.querySelector<HTMLElement>('.app-updates-modal')?.focus({preventScroll:true});
-    if(check)void call({op:'check',manual:true});
-  };
+  }
   const close=()=>{open=false;render();origin?.focus({preventScroll:true});};
   return {
     isOpen:()=>open,
     show,
     toolbar:()=>state.available?`<button id="app-update-available" class="app-update-badge" title="Branchline ${e(state.available.version)} is available"><i data-lucide="arrow-up" aria-hidden="true"></i> App update</button>`:'',
-    settings:()=>`<button id="app-updates-settings" class="app-updates-settings"><span>App updates</span><span>${state.currentVersion?`Version ${e(state.currentVersion)}`:'Check for updates'}<i data-lucide="chevron-right" aria-hidden="true"></i></span></button>`,
-    render:()=>!open?'':renderAppUpdates(state,saving),
+    settings:()=>renderAppUpdateSettings(state,saving),
+    render:()=>!open||!state.available?'':renderAppUpdates(state,saving),
     bind:()=>{
       document.getElementById('app-update-available')?.addEventListener('click',()=>show());
-      document.getElementById('app-updates-settings')?.addEventListener('click',()=>show());
       document.getElementById('app-updates-close')?.addEventListener('click',close);
       document.querySelectorAll<HTMLAnchorElement>('.app-update-notes [data-markdown-url]').forEach(link=>link.onclick=event=>{
         event.preventDefault();
         void invoke('open_markdown_link',{url:link.dataset.markdownUrl}).catch(error=>{state={...state,error:String(error)};render();});
       });
-      document.getElementById('app-updates-check')?.addEventListener('click',()=>void call({op:'check',manual:true}));
+      document.getElementById('app-updates-check')?.addEventListener('click',()=>show(true));
       document.getElementById('app-updates-install')?.addEventListener('click',()=>{if(!busy()&&state.available)void call({op:'install',version:state.available.version});});
       document.getElementById('app-updates-automatic')?.addEventListener('change',event=>{
         const automatic=(event.target as HTMLInputElement).checked;
