@@ -13,7 +13,7 @@ mod instruction_actions;
 mod instruction_files;
 #[cfg(test)]
 mod instruction_tests;
-const REVISION: u64 = 3;
+const REVISION: u64 = 4;
 const NAME: &str = "branchline-git-approval";
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -361,6 +361,20 @@ mod update_tests {
         assert_eq!(status["targets"][0]["status"], "installed");
         assert!(!installer.home.join(".claude/skills").exists());
     }
+    #[test]
+    fn previous_owned_revision_updates_without_changing_installation_scope() {
+        let (_dir, installer, folder) = fixture();
+        old_guide(&folder, Some(REVISION - 1));
+        let report = installer.auto_update().unwrap();
+        assert_eq!(report["updatedCount"], 1);
+        let installed = fs::read_to_string(folder.join("SKILL.md")).unwrap();
+        assert_eq!(installed, CONTENT);
+        assert_eq!(installer.receipt(&folder, &installed).unwrap().unwrap().revision, REVISION);
+        assert!(!installer.home.join(".codex/AGENTS.md").exists());
+        assert!(!installer.home.join(".claude/skills").join(NAME).exists());
+        assert_eq!(installer.auto_update().unwrap()["updatedCount"], 0);
+    }
+
     #[test]
     fn startup_never_installs_unmanaged_customized_or_deleted_guides() {
         let (_dir, installer, folder) = fixture();

@@ -31,6 +31,7 @@ Branchline brings both into one macOS app: a focused Git workspace inspired by f
 | Review your code | Review your AI's next move |
 | --- | --- |
 | Split and unified diffs with syntax highlighting | One visual request for the entire command chain |
+| Stash all, selected, or unstaged changes; review, apply, and pop | Global connections with managed AI skills |
 | File and hunk staging with explicit commit messages | Commit, branch, push, and PR details when statically understood |
 | Commit graph, history search, and contextual actions | Approve, deny, or deny with a reason |
 | Branch switching, fetch-only, update, and push | AI waits for the recorded result; timeout never grants approval |

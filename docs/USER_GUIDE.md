@@ -14,6 +14,20 @@ Select a changed file to inspect its side-by-side diff. **Unified** switches lay
 
 Enter a message and choose **Commit** or press Command+Return. Only staged content is committed. Existing hooks and signing settings apply. Failures preserve the message and display Git's error.
 
+## Stashes
+
+Choose **Stash changes…** in Changes, or open **Stashes** from the archive icon in the left rail. Name the stash and choose all changes, selected files, or **Unstaged only · keep staged changes**. New, untracked files are included only when you opt in. Ignored files are never included.
+
+Unstaged-only saving uses your current index as its baseline. Even when a file is partially staged, the staged version stays ready to commit and only its unstaged edits are saved. Restoring that stash later applies the difference from this saved index; if the surrounding staged work is absent or has changed, Git may need a conflict resolution.
+
+Select a stash to browse its message, branch, date, and changed files. **Saved changes** compares saved working files with their original baseline; **Staging** shows the saved staged selection. Diffs support syntax highlighting, split/unified layouts, horizontal scrolling, and supported image previews. These views are read-only.
+
+**Apply** restores changes and keeps the stash. **Pop** restores first, then removes the stash only after Git reports success. **Restore staging too** also restores its saved index. Local changes are checked before restoring; a stale preview requires review again. If Git reports a conflict or another error, the stash stays and the actual error is shown. Some changes may have been applied before an error, so inspect Changes before retrying.
+
+**Delete** asks for confirmation. Apply, Pop and Delete retain a local Git recovery reference shown under **Recovery copy** in the result. These copies persist in `refs/branchline-backups/` and are not pushed automatically. The stash list refreshes when repository changes are detected and offers a manual refresh button.
+
+Finish existing merges/rebases/conflicts before saving or restoring. Repositories need an initial commit. Changes inside submodules and special files are not saved by this workspace; work with those repositories directly. Renaming stashes and explicitly including ignored files remain queued.
+
 ## Branches and remotes
 
 Click the branch name in the toolbar to search local and remote branches. Select a local branch to check it out. Select a remote branch to create a local tracking branch. **New branch** starts from HEAD; the log's **New branch from commit** starts from a selected commit. Git blocks switches that would overwrite local changes. There is no automatic stash.
@@ -169,7 +183,7 @@ Branchline uses a separate, valid marker pair:
 
 Surrounding instructions are preserved. Branchline backs up the previous document locally and records ownership of its section. Startup updates apply only to previously opted-in, unchanged managed sections. Edited, unowned, duplicate or malformed sections stay untouched; deleted sections are not silently restored. AI Skills offers a confirmed removal action for unchanged managed sections, keeping the rest of the document.
 
-The reminder tells the AI to load the full skill before Git/GitHub changes, submit the whole command, wait for the actual result, and never treat a timeout as approval. Restart an existing AI session to load new instructions. These files provide model guidance, not enforced tool permissions; separate terminal access remains outside Branchline’s control. See [Claude Code memory](https://code.claude.com/docs/en/memory) and [Codex AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
+The reminder lets the AI run read-only queries, builds, isolated fixture tests, and safe local work directly (including staging, non-destructive stash operations, fetch without force/pruning, and branch creation/rename/switching that preserves existing work). Commits in real repositories, pushes, GitHub/PR changes, destructive actions, history rewrites, and authentication/security or publication-destination changes still require Branchline. Tests that commit or rewrite history are exempt only when all effects stay inside disposable fixture repositories and mock services, without real credentials or remote services. A chain containing a gated action needs approval as a whole. For gated actions, the AI loads the full skill, submits the unchanged command, waits for the actual result, and never treats a timeout as approval. Restart an existing AI session to load new instructions. These files provide model guidance, not enforced tool permissions; separate terminal access remains outside Branchline’s control. See [Claude Code memory](https://code.claude.com/docs/en/memory) and [Codex AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
 
 ### AI request alerts
 

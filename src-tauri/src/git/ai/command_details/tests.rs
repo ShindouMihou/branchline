@@ -18,6 +18,16 @@ fn shell(text: &str) -> CommandStep {
         timeout_seconds: None,
     }
 }
+
+#[test]
+fn guarded_release_chain_keeps_structured_action_cards() {
+    let root = repository();
+    let details = inspect(root.path(), &[shell(include_str!("fixtures/guarded-release.txt"))]).unwrap();
+    for kind in ["index.stage", "commit.create", "remote.push", "release.create"] {
+        assert!(details.iter().any(|detail| detail.kind == kind), "Missing {kind}");
+    }
+    assert!(details.iter().any(|detail| detail.message.as_deref().is_some_and(|message| message.starts_with("feat: add stash management and focused AI approvals\n") && message.contains("Staged and Unstaged sections collapsible"))));
+}
 #[test]
 fn previews_current_index_and_literal_message_without_committing() {
     let root = repository();

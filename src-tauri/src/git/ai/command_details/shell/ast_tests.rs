@@ -9,6 +9,15 @@ fn words(script: &str) -> Vec<Vec<String>> {
 }
 
 #[test]
+fn guarded_release_chain_keeps_stage_commit_and_publication_actions() {
+    let script = include_str!("../fixtures/guarded-release.txt");
+    let commands = words(script);
+    for expected in [["git", "add"], ["git", "commit"], ["git", "tag"], ["git", "push"], ["gh", "release"]] {
+        assert!(commands.iter().any(|words| words.len() >= 2 && words[0] == expected[0] && words[1] == expected[1]), "Missing {expected:?}");
+    }
+}
+
+#[test]
 fn preparation_commands_and_wrappers_preserve_git_arguments() {
     for prefix in [
         "python3 -c 'import hashlib; assert True' && ",

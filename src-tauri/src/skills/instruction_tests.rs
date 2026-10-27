@@ -133,7 +133,7 @@ fn only_owned_older_blocks_update_and_outside_bytes_are_unchanged() {
     fs::write(&path, &updated).unwrap();
     let receipt_path = installer.instruction_receipt_path("claude");
     let mut receipt: Value = serde_json::from_slice(&fs::read(&receipt_path).unwrap()).unwrap();
-    receipt["revision"] = json!(0);
+    receipt["revision"] = json!(instructions::REVISION - 1);
     receipt["block_hash"] = json!(hash(&old));
     fs::write(&receipt_path, serde_json::to_vec(&receipt).unwrap()).unwrap();
     installer.auto_update().unwrap();

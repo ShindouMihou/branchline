@@ -18,6 +18,7 @@ import {detectLanguage,languages,tokenize,type Tokens} from './syntax';
 import {createSkillSetup} from './skill-setup';
 import {createAppUpdates} from './app-updates';
 import './style.css';
+import {createStashes} from './stashes';
 interface FileEntry { path: string; old_path: string | null; index: string; worktree: string }
 interface Repo { root: string; name: string; branch: string; branchRef: string; head: string; stateToken: string; revision?: string; watching?: boolean; files: FileEntry[]; lineStats?:{additions:number;deletions:number;binaryFiles:number;skippedFiles:number}|null; stagedToken: string; detailsPending?:boolean; remotes: string[]; tracking: { upstream: string | null; ahead: number; behind: number; remote: string | null; merge: string | null }; operation: string | null; operationResult?: string; backupRef?: string }
 interface Commit { oid: string; short: string; author: string; timestamp: number; subject: string; parents: string[]; refs: string }
@@ -39,8 +40,9 @@ let restoringRepository=!!savedRepository;let persistRepository=true;
 const app = document.querySelector<HTMLDivElement>('#app')!;
 let layout:PanelLayout;try{layout=parseLayout(localStorage.getItem(layoutKey))}catch{layout=parseLayout(null)}
 const saveLayout=()=>{try{localStorage.setItem(layoutKey,JSON.stringify(layout))}catch{}};
-let repo: Repo | null = null, tab: 'changes' | 'history' = 'changes', selected: { path: string; staged: boolean } | null = null;
+let repo: Repo | null = null, tab: 'changes' | 'history' | 'stashes' = 'changes', selected: { path: string; staged: boolean } | null = null;
 let diff: Diff | null = null, commits: Commit[] = [], commit: Commit | null = null, commitFiles: string[] = [], historyPath = '';
+const collapsedChangeGroups=new Set<'staged'|'unstaged'>();
 let message = '', error = '', notification = '', busy = false, loadingDiff = false, split = true, filter = '', historyLoaded = false, sequence = 0;
 let selectedBranchReference='',branchMenuOpen=false,branchLoadError='';
 let branchMenuPoint={x:0,y:0,alignRight:true};
@@ -56,7 +58,8 @@ const historyCache=new Map<string,{files:string[];path:string;diff:Diff|null}>()
 const skillSetup=createSkillSetup(()=>render());
 let appUpdateError='';
 const appUpdates=createAppUpdates(()=>render(),()=>{dialog=null;},(text,failed)=>{if(failed){error=text;appUpdateError=text;}else{if(error===appUpdateError)error='';appUpdateError='';notification=text;recoveryRef='';}render();});
-const ai=createAiWorkspace({render:()=>render(),root:()=>repo?.root??null,canPrompt:()=>!dialog&&!busy&&!historyPending&&!skillSetup.isOpen()&&!appUpdates.isOpen(),openSkills:()=>void skillSetup.show()});
+const ai=createAiWorkspace({render:()=>render(),root:()=>repo?.root??null,canPrompt:()=>!dialog&&!busy&&!historyPending&&!skillSetup.isOpen()&&!appUpdates.isOpen()&&!stashes.isOpen()&&!stashes.isBusy(),openSkills:()=>void skillSetup.show()});
+const stashes=createStashes({setBusy:value=>{busy=value;},root:()=>repo?.root??null,files:()=>repo?.files??[],render:()=>render(),api:request=>api(request),changed:async result=>{repo=await api<Repo>({op:'status'});historyLoaded=false;void prefetchBranches(true);if(tab==='changes'){if(result.ok){notification=result.message;recoveryRef=result.recoveryRef??'';}else error=result.message;await reconcileSelection();}},openChanges:()=>void action(async()=>{tab='changes';await refresh();})});
 const icons = { Bell, FolderOpen, GitBranch, RefreshCw, GitCommitHorizontal, History, Files, Plus, Minus, Check, ChevronRight, Columns2, AlignLeft, Search, ArrowDown, ArrowUp, X, Circle, FileCode2, Settings2, CircleHelp, GitMerge, Pencil, Cherry, Undo2, Copy, ShieldCheck, Plug, Sparkles, Clock3, ChevronDown, ChevronUp, ChevronLeft, Terminal, ArrowRight, CircleDot, Info, FolderPlus, ArrowUpRight, Flag, GitPullRequest, Trash2, BookOpen, Tag, Archive, ArchiveRestore, FileText };
 const icon = (name: string) => `<i data-lucide="${name}" aria-hidden="true"></i>`;
 const esc = (s: unknown) => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -75,6 +78,7 @@ function render() {
   const logScroll = app.querySelector('.log-rows')?.scrollTop ?? 0;
   const commitListScroll=app.querySelector('.log-details')?.scrollTop??0;
   const aiViewport=captureAiViewport(app);
+  const stashOffsets=[...app.querySelectorAll<HTMLElement>('[data-stash-scroll]')].map(el=>[el.dataset.stashScroll!,el.scrollTop,el.scrollLeft] as const);
   const branchScroll=app.querySelector('.branch-list')?.scrollTop??0;
   const branchFocus=active?.closest('.branch-action-menu')?(active as HTMLButtonElement).dataset.branchAction:undefined;
   app.innerHTML = `<div class="shell" aria-busy="${busy}">
@@ -86,12 +90,13 @@ function render() {
     ${notification ? `<div class="banner success" role="status"><span>${icon('check')} ${esc(notification)}</span>${recoveryRef ? `<details class="recovery-details"><summary>Recovery details</summary><code>${esc(recoveryRef)}</code><button id="copy-recovery">Copy recovery ref</button></details>` : ''}<button id="dismiss-note" aria-label="Dismiss notification">${icon('x')}</button></div>` : ''}
     ${repo?.operation ? `<div class="banner operation"><span>A ${esc(repo.operation)} is in progress. Finish it in Git, or abort.</span><button id="abort-operation">Abort ${esc(repo.operation)}</button></div>` : ''}
     ${repo ? workspace() : restoringRepository?startupWorkspace():welcome()}
-    ${dialog ? renderDialog() : ''}${ai.render()}${skillSetup.render()}${appUpdates.render()}
+    ${dialog ? renderDialog() : ''}${stashes.renderDialog()}${ai.render()}${skillSetup.render()}${appUpdates.render()}
     <footer class="statusbar"><span>${icon('git-branch')} ${esc(repo?.branch ?? 'No repository')}</span><span>${busy ? 'Git operation in progress…' : loadingDiff ? 'Loading diff…' : repo ? changedLines(repo) : 'Ready'}</span><span class="status-right">${repo ? esc(repo.root) : 'Local repositories · Git staging workflow'}</span></footer>
   </div>`;
   createIcons({ icons, attrs: { width: 16, height: 16, 'stroke-width': 1.6 } });
-  bind(); bindOperations();ai.bind();skillSetup.bind();appUpdates.bind();bindPanelResizers(app,layout,saveLayout);
+  bind(); bindOperations();stashes.bind();ai.bind();skillSetup.bind();appUpdates.bind();bindPanelResizers(app,layout,saveLayout);
   restoreAiViewport(app,aiViewport);
+  for(const [name,top,left] of stashOffsets){const el=app.querySelector<HTMLElement>(`[data-stash-scroll="${name}"]`);if(el){el.scrollTop=top;el.scrollLeft=left;}}
   sizeDiffColumns();app.querySelectorAll<HTMLElement>('[data-diff-scroll]').forEach((track,index)=>{track.scrollLeft=sideOffsets[index]??0;track.dispatchEvent(new Event('scroll'));});diffObserver?.disconnect();const diffViewport=app.querySelector('.diff-content');if(diffViewport&&typeof ResizeObserver!=='undefined'){diffObserver=new ResizeObserver(sizeDiffColumns);diffObserver.observe(diffViewport);}
   const branchList=app.querySelector('.branch-list');if(branchList)branchList.scrollTop=branchScroll;
   const branchMenu=app.querySelector<HTMLElement>('.branch-action-menu');if(branchMenu){if(branchMenuPoint.alignRight){const index=branches.findIndex(b=>b.reference===selectedBranchReference),row=app.querySelector<HTMLElement>(`[data-select-branch="${index}"]`);if(row){const bounds=row.getBoundingClientRect();branchMenuPoint={x:bounds.right,y:bounds.top+Math.min(32,bounds.height),alignRight:true};}}const bounds=branchMenu.getBoundingClientRect();const position=menuPosition(branchMenuPoint,bounds,{width:window.innerWidth,height:window.innerHeight});branchMenu.style.left=`${position.left}px`;branchMenu.style.top=`${position.top}px`;if(branchFocus)[...branchMenu.querySelectorAll<HTMLButtonElement>('[data-branch-action]')].find(button=>button.dataset.branchAction===branchFocus)?.focus({preventScroll:true});}
@@ -130,28 +135,29 @@ function welcome() {
   return `<main class="welcome"><div class="welcome-symbol"><img src="${logoUrl}" alt="Branchline" width="54" height="54"></div><h1>Your repository.<br>Your next good commit.</h1><p>Review changes, stage precisely, and keep your history close.</p><button class="primary" id="welcome-open">${icon('folder-open')} Open a repository <kbd>⌘O</kbd></button><div class="open-path"><input id="repo-path" aria-label="Repository folder path" placeholder="Or enter a repository folder path"><button id="open-path">Open</button></div><div class="workflow"><span>${icon('files')} Review diffs</span><span>${icon('plus')} Stage hunks</span><span>${icon('git-commit-horizontal')} Commit with confidence</span></div>${!isTauri() ? '<p class="browser-note">Run the desktop app to connect to local repositories.</p>' : ''}</main>`;
 }
 function workspace() {
-  return `<div class="workbench"><nav class="rail" aria-label="Tool windows"><button data-tab="changes" class="${tab === 'changes' ? 'active' : ''}" aria-label="Local changes" title="Local changes">${icon('git-commit-horizontal')}</button><button data-tab="history" class="${tab === 'history' ? 'active' : ''}" aria-label="History" title="History">${icon('history')}</button></nav>
-    <main class="workspace" style="--sidebar-width:${layout.sidebarWidth}px"><aside class="sidebar ${layout.sidebarCollapsed?'is-collapsed':''}" aria-label="Files panel">${layout.sidebarCollapsed?`<button data-toggle-panel="sidebar" class="icon-button" aria-label="Expand files panel" title="Expand files panel">${icon('chevron-right')}</button><button data-tab="changes" class="icon-button" aria-label="Changes" title="Changes">${icon('files')}</button><button data-tab="history" class="icon-button" aria-label="History" title="History">${icon('history')}</button>`:`<div class="sidebar-title"><strong>${tab === 'changes' ? 'Changes' : 'History'}</strong><span class="subtle">${tab === 'changes' ? repo!.files.length : commits.length}</span></div>
+  return `<div class="workbench"><nav class="rail" aria-label="Tool windows"><button data-tab="changes" class="${tab === 'changes' ? 'active' : ''}" aria-label="Local changes" title="Local changes">${icon('git-commit-horizontal')}</button><button data-tab="history" class="${tab === 'history' ? 'active' : ''}" aria-label="History" title="History">${icon('history')}</button><button data-tab="stashes" class="${tab==='stashes'?'active':''}" aria-label="Stashes" title="Stashes">${icon('archive')}</button></nav>
+    ${tab==='stashes'?stashes.render():`<main class="workspace" style="--sidebar-width:${layout.sidebarWidth}px"><aside class="sidebar ${layout.sidebarCollapsed?'is-collapsed':''}" aria-label="Files panel">${layout.sidebarCollapsed?`<button data-toggle-panel="sidebar" class="icon-button" aria-label="Expand files panel" title="Expand files panel">${icon('chevron-right')}</button><button data-tab="changes" class="icon-button" aria-label="Changes" title="Changes">${icon('files')}</button><button data-tab="history" class="icon-button" aria-label="History" title="History">${icon('history')}</button>`:`<div class="sidebar-title"><strong>${tab === 'changes' ? 'Changes' : 'History'}</strong><span class="subtle">${tab === 'changes' ? repo!.files.length : commits.length}</span></div>
     <div class="tabs"><button data-tab="changes" class="${tab === 'changes' ? 'active' : ''}">Changes <span class="tab-count" aria-label="${repo!.files.length} changed file${repo!.files.length===1?'':'s'}">${repo!.files.length}</span></button><button data-tab="history" class="${tab === 'history' ? 'active' : ''}">History</button><button data-toggle-panel="sidebar" class="icon-button panel-collapse" aria-label="Collapse files panel" title="Collapse files panel">${icon('chevron-left')}</button></div>
     ${tab === 'changes' ? changes() : historyDetails()}
-    `}</aside>${!layout.sidebarCollapsed?`<div class="panel-resizer column-resizer" data-resize-panel="sidebar" role="separator" tabindex="0" aria-label="Resize files panel" aria-orientation="vertical" aria-valuemin="220" aria-valuemax="700" aria-valuenow="${Math.round(layout.sidebarWidth)}"></div>`:''}<section class="editor ${layout.logCollapsed?'log-collapsed':''} ${layout.diffCollapsed?'diff-collapsed':''}" style="--log-size:${layout.logRatio*100}%" aria-label="Review panels">${tab === 'history' ? (layout.logCollapsed?`<div class="collapsed-panel"><button data-toggle-panel="log" aria-label="Expand commit list">${icon('chevron-down')} Commit list <span>${commits.length}</span></button></div>`:history()) : ''}${tab==='history'&&!layout.logCollapsed&&!layout.diffCollapsed?`<div class="panel-resizer row-resizer" data-resize-panel="log" role="separator" tabindex="0" aria-label="Resize commit list and diff" aria-orientation="horizontal" aria-valuemin="15" aria-valuemax="85" aria-valuenow="${Math.round(layout.logRatio*100)}"></div>`:''}<section class="diff-pane ${layout.diffCollapsed?'is-collapsed':''}" aria-label="Diff viewer">${layout.diffCollapsed?`<div class="collapsed-panel"><button data-toggle-panel="diff" aria-label="Expand diff viewer">${icon('chevron-up')} Diff</button></div>`:editor()}</section></section></main></div>`;
+    `}</aside>${!layout.sidebarCollapsed?`<div class="panel-resizer column-resizer" data-resize-panel="sidebar" role="separator" tabindex="0" aria-label="Resize files panel" aria-orientation="vertical" aria-valuemin="220" aria-valuemax="700" aria-valuenow="${Math.round(layout.sidebarWidth)}"></div>`:''}<section class="editor ${layout.logCollapsed?'log-collapsed':''} ${layout.diffCollapsed?'diff-collapsed':''}" style="--log-size:${layout.logRatio*100}%" aria-label="Review panels">${tab === 'history' ? (layout.logCollapsed?`<div class="collapsed-panel"><button data-toggle-panel="log" aria-label="Expand commit list">${icon('chevron-down')} Commit list <span>${commits.length}</span></button></div>`:history()) : ''}${tab==='history'&&!layout.logCollapsed&&!layout.diffCollapsed?`<div class="panel-resizer row-resizer" data-resize-panel="log" role="separator" tabindex="0" aria-label="Resize commit list and diff" aria-orientation="horizontal" aria-valuemin="15" aria-valuemax="85" aria-valuenow="${Math.round(layout.logRatio*100)}"></div>`:''}<section class="diff-pane ${layout.diffCollapsed?'is-collapsed':''}" aria-label="Diff viewer">${layout.diffCollapsed?`<div class="collapsed-panel"><button data-toggle-panel="diff" aria-label="Expand diff viewer">${icon('chevron-up')} Diff</button></div>`:editor()}</section></section></main>`}</div>`;
 }
 function changes() {
   if(appearance.simplified && !repo!.files.length && !message) return `<div class="clean-state">${icon('check')}<h2>All clear</h2><p>Your working tree is clean.</p></div>`;
   const filtered = repo!.files.filter(f => f.path.toLowerCase().includes(filter.toLowerCase()));
   const staged = filtered.filter(f => f.index !== ' ' && f.index !== '?');
   const unstaged = filtered.filter(f => f.worktree !== ' ' || f.index === '?');
-  return `<label class="search">${icon('search')}<input id="filter" value="${esc(filter)}" placeholder="Filter changed files" aria-label="Filter changed files"></label>
+  return `<div class="changes-stash-action"><button id="stash-from-changes" ${busy?'disabled':''}>${icon('archive')} Stash changes…</button></div><label class="search">${icon('search')}<input id="filter" value="${esc(filter)}" placeholder="Filter changed files" aria-label="Filter changed files"></label>
   <div class="file-list">${group('Unstaged', unstaged, false)}${group('Staged', staged, true)}${repo!.files.length === 0 ? '<div class="list-empty">Working tree is clean.<br><span>Your next change will appear here.</span></div>' : ''}</div>
   <div class="commit-box"><div class="commit-label">${icon('git-commit-horizontal')} Commit message <span>⌘↵</span></div><textarea id="message" placeholder="Describe what changed and why…" aria-label="Commit message" spellcheck="true">${esc(message)}</textarea><div class="commit-foot"><span>${repo!.files.filter(f => f.index !== ' ' && f.index !== '?').length} staged files</span><button id="commit" class="primary" ${busy || !message.trim() || !repo!.stagedToken ? 'disabled' : ''}>${icon('check')} Commit</button></div><p class="commit-help">Commits only staged changes. Git hooks and signing settings apply.</p></div>`;
 }
 function group(label: string, files: FileEntry[], staged: boolean) {
   if(appearance.simplified && !files.length) return '';
-  return `<div class="group-heading">${icon('chevron-right')} ${label}<span>${files.length}</span></div>${files.length ? files.map(f => {
+  const key=staged?'staged':'unstaged', expanded=!collapsedChangeGroups.has(key), id=`changes-${key}`;
+  return `<button id="${id}-toggle" class="group-heading changes-group-toggle" data-change-group="${key}" aria-expanded="${expanded}" aria-controls="${id}-files" aria-label="${label} changes (${files.length})" title="${expanded?'Collapse':'Expand'} ${label.toLowerCase()} changes">${icon('chevron-right')} ${label}<span>${files.length}</span></button><div id="${id}-files" ${expanded?'':'hidden'}>${!expanded?'':files.length ? files.map(f => {
     const index = repo!.files.indexOf(f); const active = selected?.path === f.path && selected.staged === staged;
     const code = staged ? f.index : f.worktree;
     return `<div class="file-row ${active ? 'selected' : ''}"><button class="file-select" data-file="${index}" data-staged="${staged}" title="${esc(f.path)}" ${busy ? 'disabled' : ''}><span class="file-status ${code === 'D' ? 'deleted' : code === 'A' || code === '?' ? 'added' : ''}">${esc(code === '?' ? '+' : code)}</span><span class="file-path">${esc(basename(f.path))}<small>${esc(f.path.includes('/') ? f.path.slice(0, f.path.lastIndexOf('/')) : '')}</small></span></button><button class="file-action" data-stage="${index}" data-staged="${staged}" title="${staged ? 'Unstage' : 'Stage'} file" aria-label="${staged ? 'Unstage' : 'Stage'} ${esc(f.path)}" ${busy ? 'disabled' : ''}>${icon(staged ? 'minus' : 'plus')}</button></div>`;
-  }).join('') : '<div class="group-empty">No changes</div>'}`;
+  }).join('') : '<div class="group-empty">No changes</div>'}</div>`;
 }
 function historyDetails() {
   if(!commit)return `<div class="list-empty"><strong>Choose a commit</strong><br><span>Select one in the commit list to see its details and changed files.</span></div>`;
@@ -228,11 +234,12 @@ function bind() {
   document.getElementById('dismiss')?.addEventListener('click', () => { error = ''; render(); });
   document.getElementById('dismiss-note')?.addEventListener('click', () => { notification = ''; render(); });
   document.getElementById('view-mode')?.addEventListener('click', () => { split = !split; render(); });
-  app.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach(el => el.onclick = () => action(async () => { tab = el.dataset.tab as typeof tab; if (tab === 'history') { if (!historyLoaded) await loadHistory(); if (historyPath) await loadDiff(); else diff = null; } else await reconcileSelection(); render(); }));
+  app.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach(el => el.onclick = () => action(async () => { tab = el.dataset.tab as typeof tab; if(tab==='stashes'){await stashes.refresh();} else if (tab === 'history') { if (!historyLoaded) await loadHistory(); if (historyPath) await loadDiff(); else diff = null; } else await reconcileSelection(); render(); }));
   app.querySelectorAll<HTMLButtonElement>('[data-file]').forEach(el => el.onclick = () => action(async () => { selected = { path: repo!.files[Number(el.dataset.file)].path, staged: el.dataset.staged === 'true' }; await loadDiff(); }));
   app.querySelectorAll<HTMLButtonElement>('[data-stage]').forEach(el => el.onclick = () => action(async () => { const path = repo!.files[Number(el.dataset.stage)].path; repo = await api<Repo>({ op: 'stage_file', path, staged: el.dataset.staged === 'true' }); historyLoaded = false; await reconcileSelection(); }));
   app.querySelectorAll<HTMLButtonElement>('[data-hunk]').forEach(el => el.onclick = () => action(async () => { repo = await api<Repo>({ op: 'stage_hunk', path: selected!.path, staged: selected!.staged, patch: diff!.patch, hunk: Number(el.dataset.hunk) }); await reconcileSelection(); }));
   document.getElementById('message')?.addEventListener('input', e => { message = (e.target as HTMLTextAreaElement).value; if (repo) localStorage.setItem('branchline.draft:' + repo.root, message); const button = document.getElementById('commit') as HTMLButtonElement; button.disabled = busy || !message.trim() || !repo?.stagedToken; });
+  app.querySelectorAll<HTMLButtonElement>('[data-change-group]').forEach(button=>button.onclick=()=>{const key=button.dataset.changeGroup as 'staged'|'unstaged';if(collapsedChangeGroups.has(key))collapsedChangeGroups.delete(key);else collapsedChangeGroups.add(key);render();document.getElementById(button.id)?.focus({preventScroll:true});});
   document.getElementById('filter')?.addEventListener('input', e => { filter = (e.target as HTMLInputElement).value; render(); });
   document.getElementById('commit')?.addEventListener('click', doCommit);
   app.querySelectorAll<HTMLButtonElement>('[data-commit]').forEach(el => {
@@ -254,7 +261,7 @@ async function pickRepo() {
 }
 async function openRepo(path: string) {
   if (!path.trim()) return;
-  await action(async () => { const opened = await api<Repo>({ op: 'open_quick', path: path.trim() }); repo = opened; branches=branchCache.peek(repo.root)??[];branchMenuOpen=false;branchLoadError=''; selected = null; diff = null; commits = []; selectedOids.clear(); dialog=null; menu=false; commit = null; commitFiles = []; historyPath = ''; filter = ''; message = localStorage.getItem('branchline.draft:' + repo.root) ?? ''; tab = 'changes'; historyLoaded = false; if(persistRepository)localStorage.setItem('branchline.repo', repo.root); await reconcileSelection();void finishOpening(repo.root); });
+  await action(async () => { const opened = await api<Repo>({ op: 'open_quick', path: path.trim() }); repo = opened; stashes.reset(); branches=branchCache.peek(repo.root)??[];branchMenuOpen=false;branchLoadError=''; selected = null; diff = null; commits = []; selectedOids.clear(); dialog=null; menu=false; commit = null; commitFiles = []; historyPath = ''; filter = ''; message = localStorage.getItem('branchline.draft:' + repo.root) ?? ''; tab = 'changes'; historyLoaded = false; if(persistRepository)localStorage.setItem('branchline.repo', repo.root); await reconcileSelection();void finishOpening(repo.root); });
 }
 async function loadDiff() {
   const id = ++sequence; loadingDiff = true; diff = null; const view = app.querySelector('.diff-content'); if (view) view.scrollTop = 0; render();
@@ -267,14 +274,14 @@ async function reconcileSelection() {
   if (selected) await loadDiff(); else diff = null;
 }
 async function loadHistory() { commits = await api<Commit[]>({ op: 'history', skip: 0, all: logAll }); historyLoaded = true; }
-async function refresh() { if (!repo) return; repo = await api<Repo>({ op: 'status' });void prefetchBranches(true); if (tab === 'changes') await reconcileSelection(); else { await loadHistory(); selectedOids = new Set([...selectedOids].filter(oid=>commits.some(c=>c.oid===oid))); if (commit && !commits.some(c=>c.oid===commit!.oid)) {commit=null;commitFiles=[];historyPath='';diff=null;} if (historyPath) await loadDiff(); } }
+async function refresh() { if (!repo) return; repo = await api<Repo>({ op: 'status' });void prefetchBranches(true); if(tab==='stashes')await stashes.refresh();else if (tab === 'changes') await reconcileSelection(); else { await loadHistory(); selectedOids = new Set([...selectedOids].filter(oid=>commits.some(c=>c.oid===oid))); if (commit && !commits.some(c=>c.oid===commit!.oid)) {commit=null;commitFiles=[];historyPath='';diff=null;} if (historyPath) await loadDiff(); } }
 async function doCommit() {
   if (!repo || !message.trim() || !repo.stagedToken) return;
   await action(async () => { repo = await api<Repo>({ op: 'commit', message, expected: repo!.stagedToken }); message = ''; localStorage.removeItem('branchline.draft:' + repo!.root); historyLoaded = false; notification = 'Commit created. Your staged changes are now in history.'; await reconcileSelection(); });
 }
-document.addEventListener('keydown', e => { if (dialog||ai.isOpen()||appUpdates.isOpen()) return; if (!(e.metaKey || e.ctrlKey)) return; if (e.key.toLowerCase() === 'n') {e.preventDefault();void invoke('new_window').catch(reason=>{error=String(reason);render()});} if (e.key.toLowerCase() === 'o') { e.preventDefault(); pickRepo(); } if (e.key.toLowerCase() === 'r') { e.preventDefault(); action(refresh); } if (e.key === 'Enter' && tab === 'changes') { e.preventDefault(); doCommit(); } });
+document.addEventListener('keydown', e => { if (dialog||ai.isOpen()||appUpdates.isOpen()||stashes.isOpen()||stashes.isBusy()) return; if (!(e.metaKey || e.ctrlKey)) return; if (e.key.toLowerCase() === 'n') {e.preventDefault();void invoke('new_window').catch(reason=>{error=String(reason);render()});} if (e.key.toLowerCase() === 'o') { e.preventDefault(); pickRepo(); } if (e.key.toLowerCase() === 'r') { e.preventDefault(); action(refresh); } if (e.key === 'Enter' && tab === 'changes') { e.preventDefault(); doCommit(); } });
 let lastInteraction=0;
-const canAutoRefresh=()=>!isPanelResizing()&&!!repo&&!busy&&!historyPending&&!dialog&&!ai.isOpen()&&!appUpdates.isOpen()&&!updateMenu&&!menu&&!document.hidden&&Date.now()-lastInteraction>400;
+const canAutoRefresh=()=>!isPanelResizing()&&!!repo&&!busy&&!historyPending&&!dialog&&!ai.isOpen()&&!appUpdates.isOpen()&&!stashes.isOpen()&&!stashes.isBusy()&&!updateMenu&&!menu&&!document.hidden&&Date.now()-lastInteraction>400;
 document.addEventListener('pointerdown',()=>{lastInteraction=Date.now();});
 document.addEventListener('keydown',()=>{lastInteraction=Date.now();});
 const checkLocalChanges=createAutoRefresh({current:()=>repo,allowed:canAutoRefresh,revision:()=>api({op:'revision'}),refresh:refreshInBackground});
@@ -533,6 +540,7 @@ async function refreshInBackground() {
   const current=await api<Repo>({op:'status'});
   const valid=()=>canAutoRefresh()&&repo?.root===root&&tab===view&&JSON.stringify(selected)===priorSelection&&commit?.oid===priorCommit&&historyPath===priorPath&&logAll===priorScope;
   if(!valid())return;
+  if(view==='stashes'){if(!valid())return;repo=current;await stashes.refresh();return;}
   let nextSelected=selected, nextDiff=diff, nextCommits=commits;
   if(view==='changes'){
     const exists=nextSelected&&current.files.some(f=>f.path===nextSelected!.path&&(nextSelected!.staged?f.index!==' '&&f.index!=='?':f.worktree!==' '||f.index==='?'));

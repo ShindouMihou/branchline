@@ -62,5 +62,27 @@ it('submits the network dialog and keeps the workbench below notifications',asyn
   expect((document.getElementById('new-branch-name') as HTMLInputElement).value).toBe('feature/readable');
   expect(document.querySelector('.dialog-note')?.textContent).toContain('Start from main');
   expect(document.querySelector('.dialog-note')?.textContent).not.toContain(repo.head);
+  document.getElementById('dialog-close')?.click();
+  const changed={...repo,files:[{path:'example.txt',old_path:null,index:'M',worktree:'M'}]};
+  invoke.mockImplementation(async(_command,args)=>args.request.op==='stash'||args.request.op==='branches'||args.request.op==='history'?[]:args.request.op==='diff'?{patch:'@@ -1 +1 @@\n-old\n+new\n'}:changed);
+  document.dispatchEvent(new KeyboardEvent('keydown',{key:'r',metaKey:true,bubbles:true}));
+  await vi.waitFor(()=>expect(document.getElementById('changes-unstaged-toggle')).not.toBeNull());
+  document.getElementById('changes-unstaged-toggle')!.click();
+  expect(document.getElementById('changes-unstaged-toggle')?.getAttribute('aria-expanded')).toBe('false');
+  expect(document.getElementById('changes-unstaged-files')?.hasAttribute('hidden')).toBe(true);
+  expect(document.querySelectorAll('#changes-staged-files .file-row')).toHaveLength(1);
+  document.getElementById('changes-staged-toggle')!.click();
+  document.dispatchEvent(new KeyboardEvent('keydown',{key:'r',metaKey:true,bubbles:true}));
+  await vi.waitFor(()=>expect(document.querySelector('.shell')?.getAttribute('aria-busy')).toBe('false'));
+  expect(document.getElementById('changes-staged-toggle')?.getAttribute('aria-expanded')).toBe('false');
+  document.getElementById('changes-unstaged-toggle')!.click();
+  expect(document.querySelectorAll('#changes-unstaged-files .file-row')).toHaveLength(1);
+  expect(document.getElementById('changes-unstaged-toggle')).toBe(document.activeElement);
+
+  (document.querySelector('[data-tab="stashes"]') as HTMLButtonElement).click();
+  await vi.waitFor(()=>expect(document.querySelector('.stash-empty')?.textContent).toContain('A place to pause your work'));
+  expect(invoke).toHaveBeenCalledWith('request',{request:{op:'stash',request:{action:'list',expected_root:'/repo'}}});
+  expect(document.querySelector('.workspace')).toBeNull();
+
 
 });

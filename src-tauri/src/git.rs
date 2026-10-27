@@ -4,6 +4,7 @@ mod media;
 mod operations;
 mod source;
 mod watch;
+pub(crate) mod stashes;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sha2::{Digest, Sha256};
@@ -28,6 +29,7 @@ pub enum Request {
         expected_root: String,
     },
     Status,
+    Stash { request: stashes::Request },
     Revision,
     Branches {
         expected_root: Option<String>,
@@ -139,7 +141,6 @@ fn git_env(
     use std::os::unix::process::CommandExt;
     let mut cmd = Command::new("git");
     cmd.process_group(0);
-    cmd.envs(env.iter().copied());
     cmd.current_dir(root)
         .args(["-c", "core.fsmonitor=false"])
         .args(args)
@@ -156,6 +157,7 @@ fn git_env(
     ] {
         cmd.env_remove(key);
     }
+    cmd.envs(env.iter().copied());
     let mut child = cmd
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
@@ -366,6 +368,7 @@ impl Service {
                 self.status()
             }
             Request::Status => self.status(),
+            Request::Stash { request } => stashes::handle(&root, request),
             Request::Revision => Ok(
                 json!({"root":root,"revision":self.watch.revision(),"watching":self.watch.healthy()}),
             ),
