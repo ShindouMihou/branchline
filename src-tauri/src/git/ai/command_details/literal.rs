@@ -203,9 +203,9 @@ pub(super) fn inspect(words: &[String], index: usize, state: &mut State) -> Opti
             Some(release::inspect(args, index))
         }
         [program, family, command, args @ ..]
-            if program == "gh" && family == "pr" && command == "create" =>
+            if program == "gh" && family == "pr" && matches!(command.as_str(), "create" | "edit") =>
         {
-            Some(pull_request(None, args, index, state))
+            Some(pull_request(None, args, index, state, command == "edit"))
         }
         [program, family, command, args @ ..]
             if program == "gh"

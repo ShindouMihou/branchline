@@ -28,7 +28,7 @@ The update signature is separate from macOS code signing. Preview builds remain 
    npm run release:prepare
    ```
 
-   The helper builds the app with updater artifacts, verifies the app signature, version, identity, and architecture, and writes five files into .local/releases/vVERSION. Existing release output is never overwritten. Use `-- --output .local/updater-validation` for a separate local validation build.
+   The helper builds the app with updater artifacts, verifies the app signature, version, identity, and architecture, and writes five files into .local/releases/vVERSION. Existing release output is never overwritten. After all five files are saved, successful preparation automatically removes generated Rust debug and compiler caches while retaining the app bundle, release packages, source, and toolchain. Use `-- --output .local/updater-validation` for a separate local validation build.
 4. Publish all five files with the matching GitHub release:
 
    - Branchline-macOS-arm64.zip
@@ -48,3 +48,15 @@ The initial private updater key is stored outside the repository at `~/.tauri/br
 To use another secure key-file location, set TAURI_SIGNING_PRIVATE_KEY to its file path and keep the matching .pub alongside it. An encrypted key can use TAURI_SIGNING_PRIVATE_KEY_PASSWORD from a protected environment. Replacing the public key is a migration requiring a release trusted by the old key; generating a new key alone does not update existing users' trust.
 
 For notarized production releases, configure a Developer ID signing identity and notarization credentials separately from the updater key.
+
+## Build-cache cleanup
+
+Release preparation cleans `src-tauri/target/debug` and the release `build`, `deps`, `.fingerprint`, and `incremental` directories. The app bundle under `target/release/bundle/macos`, all `.local/releases` packages, the toolchain, and signing keys are retained. This trades a slower next Rust build for bounded cache storage between releases.
+
+Cleanup checks the matching app/release files, updater metadata and ZIP checksum before deleting anything. It refuses symlinked cache paths, output directories overlapping a cache, and active Rust builds. If cleanup is skipped, release assets remain ready and the helper prints the reason. Once other builds finish, retry:
+
+```sh
+npm run release:cleanup
+```
+
+For a custom release output directory, use `npm run release:cleanup -- --output PATH`. Cleanup is idempotent and does not publish, delete, or modify a GitHub release.

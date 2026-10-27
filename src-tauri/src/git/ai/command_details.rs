@@ -7,6 +7,8 @@ mod shell;
 mod staging;
 mod types;
 mod message_file;
+mod pull_requests;
+use pull_requests::inspect as pull_request;
 use message_file::read_text;
 use super::commands::CommandStep;
 use staging::stage;
@@ -243,74 +245,11 @@ fn create_branch(args: &[String], command_index: usize, state: &State) -> Detail
     detail
 }
 
-fn pull_request(root: Option<&Path>, args: &[String], command_index: usize, state: &State) -> Detail {
-    let mut detail = Detail::new(command_index, "pr.create", "Open pull request");
-    detail.head_branch = state.branch.clone();
-    detail.evidence = "Literal PR options; an omitted head is inferred from the current or prospectively selected branch, not verified with GitHub.".into();
-    let mut index = 0;
-    while index < args.len() {
-        if args[index] == "--" {
-            detail.warnings.push("Arguments after the option terminator are not PR options; their interpretation is left to GitHub CLI.".into());
-            break;
-        }
-        let mut recognized = false;
-        for (short, long, field) in [
-            ("-t", "--title", 0),
-            ("-b", "--body", 1),
-            ("-B", "--base", 2),
-            ("-H", "--head", 3),
-            ("-F", "--body-file", 4),
-        ] {
-            if let Some(value) = flag(args, &mut index, short, long) {
-                recognized = true;
-                match value {
-                    Ok(value) => match field {
-                        0 => detail.pull_request_title = Some(value),
-                        1 => detail.body = Some(value),
-                        2 => detail.base_branch = Some(value),
-                        3 => detail.head_branch = Some(value),
-                        _ => match message_file::read_body(root, &value) {
-                            Ok(text) => {
-                                detail.body = Some(text);
-                                detail.warnings.push("The description is a current file snapshot, not a frozen execution input. Earlier commands or later edits may change what GitHub CLI reads.".into());
-                            },
-                            Err(error) => detail.warnings.push(error),
-                        },
-                    },
-                    Err(error) => detail.warnings.push(error),
-                }
-                break;
-            }
-        }
-        if !recognized {
-            detail
-                .warnings
-                .push(if args[index] == "--draft" || args[index] == "-d" {
-                    "The pull request will be a draft.".into()
-                } else {
-                    format!(
-                        "Additional PR argument {:?} is not represented in these details.",
-                        args[index]
-                    )
-                });
-        }
-        index += 1;
-    }
-    if detail.base_branch.is_none() {
-        detail
-            .warnings
-            .push("The base branch is chosen by GitHub CLI at execution time.".into());
-    }
-    if detail.pull_request_title.is_none() || detail.body.is_none() {
-        detail.warnings.push("Title or description may be generated or requested by GitHub CLI; missing text is not previewed.".into());
-    }
-    detail.warnings.push("Account, repository, server defaults, publication, and resulting PR URL are not verified by this preview.".into());
-    detail
-}
-
 pub(super) struct Analysis {
     fragments: Result<Vec<Result<Vec<String>, String>>, String>,
     pub literal_sequence: bool,
+    stdin: Option<String>,
+    stdin_direct: bool,
 }
 
 pub(super) fn analyze(step: &CommandStep) -> Analysis {
@@ -320,7 +259,9 @@ pub(super) fn analyze(step: &CommandStep) -> Analysis {
     } else {
         Ok(vec![Ok(std::iter::once(step.program.clone()).chain(step.argv.clone()).collect())])
     };
-    Analysis { fragments, literal_sequence: literal_commands(step).is_some() }
+    let literals = literal_commands(step);
+    let stdin_direct = step.program == "gh" || step.program == "shell" && literals.as_ref().is_some_and(|commands| commands.len() == 1 && commands[0].first().is_some_and(|program| program == "gh"));
+    Analysis { fragments, literal_sequence: literals.is_some(), stdin: step.stdin.clone(), stdin_direct }
 }
 
 #[cfg(test)]
@@ -434,9 +375,9 @@ pub(super) fn inspect_analyzed(root: &Path, analyses: &[Analysis]) -> Result<Vec
                         create_branch(args, command_index, &state)
                     }
                     [program, family, command, args @ ..]
-                        if program == "gh" && family == "pr" && command == "create" =>
+                        if program == "gh" && family == "pr" && matches!(command.as_str(), "create" | "edit") =>
                     {
-                        pull_request(Some(root), args, command_index, &state)
+                        pull_request(Some(root), args, command_index, &state, command == "edit")
                     }
                     _ => {
                         state.branch = None;
@@ -453,6 +394,7 @@ pub(super) fn inspect_analyzed(root: &Path, analyses: &[Analysis]) -> Result<Vec
                 state.branch = None;
                 state.index_uncertain = true;
             }
+            pull_requests::bind_input(&mut detail, analysis.stdin.as_deref(), analysis.stdin_direct);
             if detail.working_directory.is_none() {
                 detail.working_directory = requested_directory.clone();
             }
@@ -521,3 +463,6 @@ mod blind_cycles;
 
 #[cfg(test)]
 mod context_tests;
+
+#[cfg(test)]
+mod pull_request_tests;

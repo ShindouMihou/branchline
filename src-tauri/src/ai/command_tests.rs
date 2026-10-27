@@ -269,3 +269,17 @@ fn pr_body_file_changes_are_explained_before_execution() {
     assert!(saved.approval.is_none());
     assert!(saved.execution[0].commands.is_empty());
 }
+
+#[test]
+fn pr_edit_stdin_preview_is_bound_to_the_exact_request_without_executing_github() {
+    let (_dir, broker, credential, _repo) = fixture();
+    let mut args = json!({"schemaVersion":1,"idempotencyKey":"pr-edit-stdin","command":"gh pr edit 1 --repo Pedi-Solutions-Inc/kusina --title 'Rewrite stage prompts' --body-file -","stdin":"## Summary\n\nThe full description.\n","explanation":{"summary":"Update PR 1","reason":"Describe the work","impact":"Change its title and description","uncertainties":["The GitHub result is not verified"]}});
+    let plan = broker.lock().unwrap().tool(&credential,"branchline_propose_command",args.clone()).unwrap();
+    assert_eq!(plan["status"],"ready","{}",plan["issue"]);
+    assert_eq!(plan["preview"]["commandDetails"][0]["kind"],"pr.edit");
+    assert_eq!(plan["preview"]["commandDetails"][0]["body"],args["stdin"]);
+    assert_eq!(plan["preview"]["commandDetails"][0]["pullRequestTarget"],"1");
+    assert!(plan["execution"][0]["commands"].as_array().unwrap().is_empty());
+    args["stdin"] = json!("Different description");
+    assert!(broker.lock().unwrap().tool(&credential,"branchline_propose_command",args).unwrap_err().contains("idempotency"));
+}

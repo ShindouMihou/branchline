@@ -42,6 +42,10 @@ pub struct Detail {
     pub pull_request_title: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub body: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub body_source: Option<BodySource>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub pull_request_target: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub working_directory: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -122,6 +126,8 @@ impl Detail {
             head_branch: None,
             pull_request_title: None,
             body: None,
+            body_source: None,
+            pull_request_target: None,
             working_directory: None,
             repository: None,
             visibility: None,
@@ -137,7 +143,7 @@ impl Detail {
         }
     }
     pub(super) fn hide_runtime_values(&mut self, marker: &str) {
-        for field in [&mut self.message, &mut self.operation, &mut self.stash_ref, &mut self.base_ref, &mut self.upstream_ref, &mut self.source_branch, &mut self.target_branch, &mut self.remote, &mut self.base_branch, &mut self.head_branch, &mut self.pull_request_title, &mut self.body, &mut self.working_directory, &mut self.repository, &mut self.visibility, &mut self.source_directory, &mut self.tag, &mut self.release_title, &mut self.notes_file] {
+        for field in [&mut self.message, &mut self.operation, &mut self.stash_ref, &mut self.base_ref, &mut self.upstream_ref, &mut self.source_branch, &mut self.target_branch, &mut self.remote, &mut self.base_branch, &mut self.head_branch, &mut self.pull_request_title, &mut self.body, &mut self.pull_request_target, &mut self.working_directory, &mut self.repository, &mut self.visibility, &mut self.source_directory, &mut self.tag, &mut self.release_title, &mut self.notes_file] {
             if field.as_ref().is_some_and(|value| value.contains(marker)) { *field = None; }
         }
         for field in [&mut self.files, &mut self.topics, &mut self.assets] {
@@ -159,3 +165,7 @@ impl Detail {
         detail
     }
 }
+
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[serde(rename_all = "lowercase")]
+pub enum BodySource { Argument, File, Stdin }

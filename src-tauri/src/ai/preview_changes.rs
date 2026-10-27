@@ -34,6 +34,8 @@ fn field(key: &str, before: &Value, after: &Value, context: &str, changes: &mut 
         "head" => "HEAD / source revision",
         "message" => "Commit message",
         "pullRequestTitle" => "Pull request title",
+        "pullRequestTarget" => "Pull request target",
+        "bodySource" => "Description input source",
         "body" => "Pull request description",
         "files" => "File selection",
         "assets" => "Release assets",

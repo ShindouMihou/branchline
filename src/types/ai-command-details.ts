@@ -21,6 +21,8 @@ export interface AiCommandDetail {
   headBranch?: string;
   pullRequestTitle?: string;
   body?: string;
+  bodySource?: 'argument'|'file'|'stdin';
+  pullRequestTarget?: string;
   workingDirectory?: string;
   repository?: string;
   visibility?: string;

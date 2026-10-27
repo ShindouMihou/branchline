@@ -5,6 +5,7 @@ import {fileURLToPath} from 'node:url';
 import {homedir} from 'node:os';
 import {createHash} from 'node:crypto';
 import {releaseManifest} from './release-manifest.mjs';
+import {cleanupReleaseCaches} from './release-cleanup.mjs';
 
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 const run=(program,args,options={})=>{
@@ -45,3 +46,10 @@ run('/usr/bin/ditto',['-c','-k','--sequesterRsrc','--keepParent',app,zip]);
 const checksum=createHash('sha256').update(readFileSync(zip)).digest('hex');
 writeFileSync(`${zip}.sha256`,`${checksum}  Branchline-macOS-arm64.zip\n`);
 console.log(`Release files prepared in ${destination}. Publish all five files with the matching v${version} GitHub release. Nothing has been uploaded.`);
+
+try {
+ const cleanup=cleanupReleaseCaches({root,version,releaseDirectory:destination});
+ console.log(`Removed ${cleanup.removed.length} generated build cache directories; app and release assets retained.`);
+}catch(error){
+ console.warn(`Release assets are ready, but cache cleanup was skipped: ${error.message}`);
+}
