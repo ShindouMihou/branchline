@@ -1,0 +1,47 @@
+// @vitest-environment happy-dom
+import {vi,it,expect} from 'vitest';
+const {invoke}=vi.hoisted(()=>({invoke:vi.fn()}));
+vi.mock('@tauri-apps/api/core',()=>({invoke,isTauri:()=>false}));
+vi.mock('@tauri-apps/plugin-dialog',()=>({open:vi.fn(),save:vi.fn()}));
+it('keeps the reviewed diff visible while another commit loads and ignores superseded responses',async()=>{
+  const repo={root:'/repo',name:'test',branch:'main',branchRef:'refs/heads/main',head:'a'.repeat(40),stateToken:'token',files:[],stagedToken:'',remotes:[],tracking:{ahead:0,behind:0},operation:null};
+  const commits=['First','Second','Third'].map((subject,i)=>({oid:String(i+1).repeat(40),short:String(i+1).repeat(7),subject,author:'Test',timestamp:1,parents:[],refs:''}));
+  const patch=(word:string)=>({patch:`diff --git a/file.txt b/file.txt\n--- a/file.txt\n+++ b/file.txt\n@@ -1 +1 @@\n-old\n+${word}\n`});
+  let finishSecond!:(v:unknown)=>void;
+  invoke.mockImplementation(async(_cmd,{request:r})=>{
+    if(r.op==='history')return commits;
+    if(r.op==='commit_files')return ['file.txt','second.txt'];
+    if(r.op==='commit_diff')return r.oid===commits[1].oid?new Promise(resolve=>{finishSecond=resolve}):patch(r.oid===commits[0].oid?(r.path==='second.txt'?'first-content-second-file':'first-content'):'third-content');
+    return repo;
+  });
+  document.body.innerHTML='<div id="app"></div>';await import('./main');
+  (document.getElementById('repo-path') as HTMLInputElement).value='/repo';document.getElementById('open-path')!.click();
+  await vi.waitFor(()=>expect(document.querySelector('.clean-state')).not.toBeNull());
+  (document.querySelector('[data-tab="history"]') as HTMLButtonElement).click();
+  await vi.waitFor(()=>expect(document.querySelectorAll('[data-commit]').length).toBe(3));
+  (document.querySelector('[data-commit="0"]') as HTMLButtonElement).click();
+  await vi.waitFor(()=>expect(document.querySelector('.diff-content')?.textContent).toContain('first-content'));
+  document.querySelector('.log-details')!.scrollTop=150;
+  (document.querySelector('[data-history-file="1"]') as HTMLButtonElement).click();
+  await vi.waitFor(()=>expect(document.querySelector('.diff-content')?.textContent).toContain('first-content-second-file'));
+  expect(document.querySelector('.log-details')!.scrollTop).toBe(150);
+  const prior=document.querySelector('.diff-content');
+  (document.querySelector('[data-commit="1"]') as HTMLButtonElement).click();
+  await vi.waitFor(()=>expect(finishSecond).toBeTypeOf('function'));
+  expect(prior?.isConnected).toBe(true);
+  expect(document.querySelector('.diff-content')?.textContent).toContain('first-content');
+  (document.querySelector('[data-commit="2"]') as HTMLButtonElement).click();
+  await vi.waitFor(()=>expect(document.querySelector('.diff-content')?.textContent).toContain('third-content'));
+  finishSecond(patch('obsolete-second-content'));
+  await Promise.resolve();await Promise.resolve();
+  expect(document.querySelector('.diff-content')?.textContent).toContain('third-content');
+  expect(document.querySelector('.revision-head')).toBeNull();
+  expect(document.querySelector('.revision-toolbar #view-mode')?.classList.contains('quiet-control')).toBe(true);
+  const row=document.querySelector('[data-commit="2"]') as HTMLButtonElement;
+  row.dispatchEvent(new MouseEvent('contextmenu',{bubbles:true,clientX:450,clientY:250}));
+  await vi.waitFor(()=>expect(document.querySelector('.log-action-menu')).not.toBeNull());
+  const menu=document.querySelector('.log-action-menu') as HTMLElement;
+  expect(menu.style.left).toBe('450px');expect(menu.style.top).toBe('250px');
+  expect(menu.querySelectorAll('svg')).toHaveLength(6);
+  expect(document.querySelector('[aria-label="Commit selection help"]')).not.toBeNull();
+});

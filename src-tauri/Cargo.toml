@@ -1,0 +1,24 @@
+[package]
+name = "branchline"
+version = "0.4.0"
+edition = "2021"
+license = "Apache-2.0"
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-clipboard-manager = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+wait-timeout = "0.2"
+sha2 = "0.10"
+libc = "0.2"
+tempfile = "3"
+notify = "8"
+base64 = "0.23"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSApplication", "NSImage"] }
+objc2-foundation = { version = "0.3", default-features = false, features = ["std", "NSData"] }

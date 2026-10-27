@@ -1,0 +1,28 @@
+{
+  "name": "branchline",
+  "version": "0.4.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc && vite build",
+    "tauri": "node scripts/tauri.mjs",
+    "test": "vitest run",
+    "desktop": "node scripts/tauri.mjs dev"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-clipboard-manager": "^2.5.0",
+    "@tauri-apps/plugin-dialog": "^2",
+    "lucide": "^0.468.0",
+    "shiki": "4.5.0"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "happy-dom": "^21.0.4",
+    "typescript": "~5.8.3",
+    "vite": "^6.3.0",
+    "vitest": "^5.0.5"
+  }
+}

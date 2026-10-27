@@ -1,0 +1,3442 @@
+{
+  "schemaVersion": 1,
+  "capturedOn": "2026-10-26",
+  "gitVersion": "git version 2.54.0 (Apple Git-157)",
+  "ghVersion": "gh version 2.102.0 (2026-09-30)",
+  "sources": [
+    "https://git-scm.com/docs/git",
+    "https://cli.github.com/manual/gh_help_reference"
+  ],
+  "scope": "Installed built-in command inventory. Support applies only to listed typed scopes, not every flag. Third-party extensions and aliases are manual by default. Unknown future commands are unsupported until a typed adapter is added.",
+  "commands": [
+    {
+      "program": "git",
+      "command": "add",
+      "family": "Main Porcelain Commands",
+      "description": "Add file contents to the index",
+      "support": "native_ui_only",
+      "operation": null,
+      "scope": "Selected operations are available in the native app; no AI execution grant exists yet."
+    },
+    {
+      "program": "git",
+      "command": "am",
+      "family": "Main Porcelain Commands",
+      "description": "Apply a series of patches from a mailbox",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "archive",
+      "family": "Main Porcelain Commands",
+      "description": "Create an archive of files from a named tree",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "backfill",
+      "family": "Main Porcelain Commands",
+      "description": "Download missing objects in a partial clone",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "bisect",
+      "family": "Main Porcelain Commands",
+      "description": "Use binary search to find the commit that introduced a bug",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "branch",
+      "family": "Main Porcelain Commands",
+      "description": "List, create, or delete branches",
+      "support": "native_ui_only",
+      "operation": null,
+      "scope": "Selected operations are available in the native app; no AI execution grant exists yet."
+    },
+    {
+      "program": "git",
+      "command": "bundle",
+      "family": "Main Porcelain Commands",
+      "description": "Move objects and refs by archive",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "checkout",
+      "family": "Main Porcelain Commands",
+      "description": "Switch branches or restore working tree files",
+      "support": "native_ui_only",
+      "operation": null,
+      "scope": "Selected operations are available in the native app; no AI execution grant exists yet."
+    },
+    {
+      "program": "git",
+      "command": "cherry-pick",
+      "family": "Main Porcelain Commands",
+      "description": "Apply the changes introduced by some existing commits",
+      "support": "native_ui_only",
+      "operation": null,
+      "scope": "Selected operations are available in the native app; no AI execution grant exists yet."
+    },
+    {
+      "program": "git",
+      "command": "citool",
+      "family": "Main Porcelain Commands",
+      "description": "Graphical alternative to git-commit",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "clean",
+      "family": "Main Porcelain Commands",
+      "description": "Remove untracked files from the working tree",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "clone",
+      "family": "Main Porcelain Commands",
+      "description": "Clone a repository into a new directory",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "commit",
+      "family": "Main Porcelain Commands",
+      "description": "Record changes to the repository",
+      "support": "typed_mcp",
+      "operation": "commit.create",
+      "scope": "Creates exactly the reviewed staged changes; no amend or hooks."
+    },
+    {
+      "program": "git",
+      "command": "describe",
+      "family": "Main Porcelain Commands",
+      "description": "Give an object a human readable name based on an available ref",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "diff",
+      "family": "Main Porcelain Commands",
+      "description": "Show changes between commits, commit and working tree, etc",
+      "support": "typed_mcp",
+      "operation": "branchline_inspect:staged_diff",
+      "scope": "Staged diff only, with source access enabled."
+    },
+    {
+      "program": "git",
+      "command": "fetch",
+      "family": "Main Porcelain Commands",
+      "description": "Download objects and refs from another repository",
+      "support": "native_ui_only",
+      "operation": null,
+      "scope": "Selected operations are available in the native app; no AI execution grant exists yet."
+    },
+    {
+      "program": "git",
+      "command": "format-patch",
+      "family": "Main Porcelain Commands",
+      "description": "Prepare patches for e-mail submission",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "gc",
+      "family": "Main Porcelain Commands",
+      "description": "Cleanup unnecessary files and optimize the local repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "gitk",
+      "family": "Main Porcelain Commands",
+      "description": "The Git repository browser",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "grep",
+      "family": "Main Porcelain Commands",
+      "description": "Print lines matching a pattern",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "gui",
+      "family": "Main Porcelain Commands",
+      "description": "A portable graphical interface to Git",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "history",
+      "family": "Main Porcelain Commands",
+      "description": "EXPERIMENTAL: Rewrite history",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "init",
+      "family": "Main Porcelain Commands",
+      "description": "Create an empty Git repository or reinitialize an existing one",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "log",
+      "family": "Main Porcelain Commands",
+      "description": "Show commit logs",
+      "support": "typed_mcp",
+      "operation": "branchline_inspect:history",
+      "scope": "Paged local history."
+    },
+    {
+      "program": "git",
+      "command": "maintenance",
+      "family": "Main Porcelain Commands",
+      "description": "Run tasks to optimize Git repository data",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "merge",
+      "family": "Main Porcelain Commands",
+      "description": "Join two or more development histories together",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "mv",
+      "family": "Main Porcelain Commands",
+      "description": "Move or rename a file, a directory, or a symlink",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "notes",
+      "family": "Main Porcelain Commands",
+      "description": "Add or inspect object notes",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "pull",
+      "family": "Main Porcelain Commands",
+      "description": "Fetch from and integrate with another repository or a local branch",
+      "support": "native_ui_only",
+      "operation": null,
+      "scope": "Selected operations are available in the native app; no AI execution grant exists yet."
+    },
+    {
+      "program": "git",
+      "command": "push",
+      "family": "Main Porcelain Commands",
+      "description": "Update remote refs along with associated objects",
+      "support": "typed_mcp",
+      "operation": "remote.push",
+      "scope": "One create-only new branch or fast-forward existing branch; no deletion, tags, mirror or history rewrite."
+    },
+    {
+      "program": "git",
+      "command": "range-diff",
+      "family": "Main Porcelain Commands",
+      "description": "Compare two commit ranges (e.g. two versions of a branch)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "rebase",
+      "family": "Main Porcelain Commands",
+      "description": "Reapply commits on top of another base tip",
+      "support": "native_ui_only",
+      "operation": null,
+      "scope": "Selected operations are available in the native app; no AI execution grant exists yet."
+    },
+    {
+      "program": "git",
+      "command": "reset",
+      "family": "Main Porcelain Commands",
+      "description": "Set `HEAD` or the index to a known state",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "restore",
+      "family": "Main Porcelain Commands",
+      "description": "Restore working tree files",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "revert",
+      "family": "Main Porcelain Commands",
+      "description": "Revert some existing commits",
+      "support": "native_ui_only",
+      "operation": null,
+      "scope": "Selected operations are available in the native app; no AI execution grant exists yet."
+    },
+    {
+      "program": "git",
+      "command": "rm",
+      "family": "Main Porcelain Commands",
+      "description": "Remove files from the working tree and from the index",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "scalar",
+      "family": "Main Porcelain Commands",
+      "description": "A tool for managing large Git repositories",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "shortlog",
+      "family": "Main Porcelain Commands",
+      "description": "Summarize 'git log' output",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "show",
+      "family": "Main Porcelain Commands",
+      "description": "Show various types of objects",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "sparse-checkout",
+      "family": "Main Porcelain Commands",
+      "description": "Reduce your working tree to a subset of tracked files",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "stash",
+      "family": "Main Porcelain Commands",
+      "description": "Stash the changes in a dirty working directory away",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "status",
+      "family": "Main Porcelain Commands",
+      "description": "Show the working tree status",
+      "support": "typed_mcp",
+      "operation": "branchline_inspect:status",
+      "scope": "Branch and staged metadata only; no automatic working-tree scan."
+    },
+    {
+      "program": "git",
+      "command": "submodule",
+      "family": "Main Porcelain Commands",
+      "description": "Initialize, update or inspect submodules",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "switch",
+      "family": "Main Porcelain Commands",
+      "description": "Switch branches",
+      "support": "native_ui_only",
+      "operation": null,
+      "scope": "Selected operations are available in the native app; no AI execution grant exists yet."
+    },
+    {
+      "program": "git",
+      "command": "tag",
+      "family": "Main Porcelain Commands",
+      "description": "Create, list, delete or verify tags",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "worktree",
+      "family": "Main Porcelain Commands",
+      "description": "Manage multiple working trees",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "config",
+      "family": "Ancillary Commands / Manipulators",
+      "description": "Get and set repository or global options",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "fast-export",
+      "family": "Ancillary Commands / Manipulators",
+      "description": "Git data exporter",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "fast-import",
+      "family": "Ancillary Commands / Manipulators",
+      "description": "Backend for fast Git data importers",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "filter-branch",
+      "family": "Ancillary Commands / Manipulators",
+      "description": "Rewrite branches",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "mergetool",
+      "family": "Ancillary Commands / Manipulators",
+      "description": "Run merge conflict resolution tools to resolve merge conflicts",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "pack-refs",
+      "family": "Ancillary Commands / Manipulators",
+      "description": "Pack heads and tags for efficient repository access",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "prune",
+      "family": "Ancillary Commands / Manipulators",
+      "description": "Prune all unreachable objects from the object database",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "reflog",
+      "family": "Ancillary Commands / Manipulators",
+      "description": "Manage reflog information",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "refs",
+      "family": "Ancillary Commands / Manipulators",
+      "description": "Low-level access to refs",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "remote",
+      "family": "Ancillary Commands / Manipulators",
+      "description": "Manage set of tracked repositories",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "repack",
+      "family": "Ancillary Commands / Manipulators",
+      "description": "Pack unpacked objects in a repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "replace",
+      "family": "Ancillary Commands / Manipulators",
+      "description": "Create, list, delete refs to replace objects",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "annotate",
+      "family": "Ancillary Commands / Interrogators",
+      "description": "Annotate file lines with commit information",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "blame",
+      "family": "Ancillary Commands / Interrogators",
+      "description": "Show what revision and author last modified each line of a file",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "bugreport",
+      "family": "Ancillary Commands / Interrogators",
+      "description": "Collect information for user to file a bug report",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "count-objects",
+      "family": "Ancillary Commands / Interrogators",
+      "description": "Count unpacked number of objects and their disk consumption",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "diagnose",
+      "family": "Ancillary Commands / Interrogators",
+      "description": "Generate a zip archive of diagnostic information",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "difftool",
+      "family": "Ancillary Commands / Interrogators",
+      "description": "Show changes using common diff tools",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "fsck",
+      "family": "Ancillary Commands / Interrogators",
+      "description": "Verifies the connectivity and validity of the objects in the database",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "gitweb",
+      "family": "Ancillary Commands / Interrogators",
+      "description": "Git web interface (web frontend to Git repositories)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "help",
+      "family": "Ancillary Commands / Interrogators",
+      "description": "Display help information about Git",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "instaweb",
+      "family": "Ancillary Commands / Interrogators",
+      "description": "Instantly browse your working repository in gitweb",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "merge-tree",
+      "family": "Ancillary Commands / Interrogators",
+      "description": "Perform merge without touching index or working tree",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "rerere",
+      "family": "Ancillary Commands / Interrogators",
+      "description": "Reuse recorded resolution of conflicted merges",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "show-branch",
+      "family": "Ancillary Commands / Interrogators",
+      "description": "Show branches and their commits",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "verify-commit",
+      "family": "Ancillary Commands / Interrogators",
+      "description": "Check the GPG signature of commits",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "verify-tag",
+      "family": "Ancillary Commands / Interrogators",
+      "description": "Check the GPG signature of tags",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "version",
+      "family": "Ancillary Commands / Interrogators",
+      "description": "Display version information about Git",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "whatchanged",
+      "family": "Ancillary Commands / Interrogators",
+      "description": "Show logs with differences each commit introduces",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "archimport",
+      "family": "Interacting with Others",
+      "description": "Import a GNU Arch repository into Git",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "cvsexportcommit",
+      "family": "Interacting with Others",
+      "description": "Export a single commit to a CVS checkout",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "cvsimport",
+      "family": "Interacting with Others",
+      "description": "Salvage your data out of another SCM people love to hate",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "cvsserver",
+      "family": "Interacting with Others",
+      "description": "A CVS server emulator for Git",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "imap-send",
+      "family": "Interacting with Others",
+      "description": "Send a collection of patches from stdin to an IMAP folder",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "p4",
+      "family": "Interacting with Others",
+      "description": "Import from and submit to Perforce repositories",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "quiltimport",
+      "family": "Interacting with Others",
+      "description": "Applies a quilt patchset onto the current branch",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "request-pull",
+      "family": "Interacting with Others",
+      "description": "Generates a summary of pending changes",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "send-email",
+      "family": "Interacting with Others",
+      "description": "Send a collection of patches as emails",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "svn",
+      "family": "Interacting with Others",
+      "description": "Bidirectional operation between a Subversion repository and Git",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "apply",
+      "family": "Low-level Commands / Manipulators",
+      "description": "Apply a patch to files and/or to the index",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "checkout-index",
+      "family": "Low-level Commands / Manipulators",
+      "description": "Copy files from the index to the working tree",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "commit-graph",
+      "family": "Low-level Commands / Manipulators",
+      "description": "Write and verify Git commit-graph files",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "commit-tree",
+      "family": "Low-level Commands / Manipulators",
+      "description": "Create a new commit object",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "hash-object",
+      "family": "Low-level Commands / Manipulators",
+      "description": "Compute object ID and optionally create an object from a file",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "index-pack",
+      "family": "Low-level Commands / Manipulators",
+      "description": "Build pack index file for an existing packed archive",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "merge-file",
+      "family": "Low-level Commands / Manipulators",
+      "description": "Run a three-way file merge",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "merge-index",
+      "family": "Low-level Commands / Manipulators",
+      "description": "Run a merge for files needing merging",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "mktag",
+      "family": "Low-level Commands / Manipulators",
+      "description": "Creates a tag object with extra validation",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "mktree",
+      "family": "Low-level Commands / Manipulators",
+      "description": "Build a tree-object from ls-tree formatted text",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "multi-pack-index",
+      "family": "Low-level Commands / Manipulators",
+      "description": "Write and verify multi-pack-indexes",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "pack-objects",
+      "family": "Low-level Commands / Manipulators",
+      "description": "Create a packed archive of objects",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "prune-packed",
+      "family": "Low-level Commands / Manipulators",
+      "description": "Remove extra objects that are already in pack files",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "read-tree",
+      "family": "Low-level Commands / Manipulators",
+      "description": "Reads tree information into the index",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "replay",
+      "family": "Low-level Commands / Manipulators",
+      "description": "EXPERIMENTAL: Replay commits on a new base, works with bare repos too",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "symbolic-ref",
+      "family": "Low-level Commands / Manipulators",
+      "description": "Read, modify and delete symbolic refs",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "unpack-objects",
+      "family": "Low-level Commands / Manipulators",
+      "description": "Unpack objects from a packed archive",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "update-index",
+      "family": "Low-level Commands / Manipulators",
+      "description": "Register file contents in the working tree to the index",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "update-ref",
+      "family": "Low-level Commands / Manipulators",
+      "description": "Update the object name stored in a ref safely",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "write-tree",
+      "family": "Low-level Commands / Manipulators",
+      "description": "Create a tree object from the current index",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "cat-file",
+      "family": "Low-level Commands / Interrogators",
+      "description": "Provide contents or details of repository objects",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "cherry",
+      "family": "Low-level Commands / Interrogators",
+      "description": "Find commits yet to be applied to upstream",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "diff-files",
+      "family": "Low-level Commands / Interrogators",
+      "description": "Compares files in the working tree and the index",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "diff-index",
+      "family": "Low-level Commands / Interrogators",
+      "description": "Compare a tree to the working tree or index",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "diff-pairs",
+      "family": "Low-level Commands / Interrogators",
+      "description": "Compare the content and mode of provided blob pairs",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "diff-tree",
+      "family": "Low-level Commands / Interrogators",
+      "description": "Compares the content and mode of blobs found via two tree objects",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "for-each-ref",
+      "family": "Low-level Commands / Interrogators",
+      "description": "Output information on each ref",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "for-each-repo",
+      "family": "Low-level Commands / Interrogators",
+      "description": "Run a Git command on a list of repositories",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "get-tar-commit-id",
+      "family": "Low-level Commands / Interrogators",
+      "description": "Extract commit ID from an archive created using git-archive",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "last-modified",
+      "family": "Low-level Commands / Interrogators",
+      "description": "EXPERIMENTAL: Show when files were last modified",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "ls-files",
+      "family": "Low-level Commands / Interrogators",
+      "description": "Show information about files in the index and the working tree",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "ls-remote",
+      "family": "Low-level Commands / Interrogators",
+      "description": "List references in a remote repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "ls-tree",
+      "family": "Low-level Commands / Interrogators",
+      "description": "List the contents of a tree object",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "merge-base",
+      "family": "Low-level Commands / Interrogators",
+      "description": "Find as good common ancestors as possible for a merge",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "name-rev",
+      "family": "Low-level Commands / Interrogators",
+      "description": "Find symbolic names for given revs",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "pack-redundant",
+      "family": "Low-level Commands / Interrogators",
+      "description": "Find redundant pack files",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "repo",
+      "family": "Low-level Commands / Interrogators",
+      "description": "Retrieve information about the repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "rev-list",
+      "family": "Low-level Commands / Interrogators",
+      "description": "Lists commit objects in reverse chronological order",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "rev-parse",
+      "family": "Low-level Commands / Interrogators",
+      "description": "Pick out and massage parameters",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "show-index",
+      "family": "Low-level Commands / Interrogators",
+      "description": "Show packed archive index",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "show-ref",
+      "family": "Low-level Commands / Interrogators",
+      "description": "List references in a local repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "unpack-file",
+      "family": "Low-level Commands / Interrogators",
+      "description": "Creates a temporary file with a blob's contents",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "var",
+      "family": "Low-level Commands / Interrogators",
+      "description": "Show a Git logical variable",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "verify-pack",
+      "family": "Low-level Commands / Interrogators",
+      "description": "Validate packed Git archive files",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "daemon",
+      "family": "Low-level Commands / Syncing Repositories",
+      "description": "A really simple server for Git repositories",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "fetch-pack",
+      "family": "Low-level Commands / Syncing Repositories",
+      "description": "Receive missing objects from another repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "http-backend",
+      "family": "Low-level Commands / Syncing Repositories",
+      "description": "Server side implementation of Git over HTTP",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "send-pack",
+      "family": "Low-level Commands / Syncing Repositories",
+      "description": "Push objects over Git protocol to another repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "update-server-info",
+      "family": "Low-level Commands / Syncing Repositories",
+      "description": "Update auxiliary info file to help dumb servers",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "check-attr",
+      "family": "Low-level Commands / Internal Helpers",
+      "description": "Display gitattributes information",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "check-ignore",
+      "family": "Low-level Commands / Internal Helpers",
+      "description": "Debug gitignore / exclude files",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "check-mailmap",
+      "family": "Low-level Commands / Internal Helpers",
+      "description": "Show canonical names and email addresses of contacts",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "check-ref-format",
+      "family": "Low-level Commands / Internal Helpers",
+      "description": "Ensures that a reference name is well formed",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "column",
+      "family": "Low-level Commands / Internal Helpers",
+      "description": "Display data in columns",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "credential",
+      "family": "Low-level Commands / Internal Helpers",
+      "description": "Retrieve and store user credentials",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "credential-cache",
+      "family": "Low-level Commands / Internal Helpers",
+      "description": "Helper to temporarily store passwords in memory",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "credential-store",
+      "family": "Low-level Commands / Internal Helpers",
+      "description": "Helper to store credentials on disk",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "fmt-merge-msg",
+      "family": "Low-level Commands / Internal Helpers",
+      "description": "Produce a merge commit message",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "hook",
+      "family": "Low-level Commands / Internal Helpers",
+      "description": "Run git hooks",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "interpret-trailers",
+      "family": "Low-level Commands / Internal Helpers",
+      "description": "Add or parse structured information in commit messages",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "mailinfo",
+      "family": "Low-level Commands / Internal Helpers",
+      "description": "Extracts patch and authorship from a single e-mail message",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "mailsplit",
+      "family": "Low-level Commands / Internal Helpers",
+      "description": "Simple UNIX mbox splitter program",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "merge-one-file",
+      "family": "Low-level Commands / Internal Helpers",
+      "description": "The standard helper program to use with git-merge-index",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "patch-id",
+      "family": "Low-level Commands / Internal Helpers",
+      "description": "Compute unique IDs for patches",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "sh-i18n",
+      "family": "Low-level Commands / Internal Helpers",
+      "description": "Git's i18n setup code for shell scripts",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "sh-setup",
+      "family": "Low-level Commands / Internal Helpers",
+      "description": "Common Git shell script setup code",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "git",
+      "command": "stripspace",
+      "family": "Low-level Commands / Internal Helpers",
+      "description": "Remove unnecessary whitespace",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "agent-task",
+      "family": "agent-task",
+      "description": "Work with agent tasks (preview)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "agent-task create",
+      "family": "agent-task",
+      "description": "Create an agent task (preview)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "agent-task list",
+      "family": "agent-task",
+      "description": "List agent tasks (preview)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "agent-task view",
+      "family": "agent-task",
+      "description": "View an agent task session (preview)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "alias",
+      "family": "alias",
+      "description": "Create command shortcuts",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "alias delete",
+      "family": "alias",
+      "description": "Delete set aliases",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "alias import",
+      "family": "alias",
+      "description": "Import aliases from a YAML file",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "alias list",
+      "family": "alias",
+      "description": "List your aliases",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "alias set",
+      "family": "alias",
+      "description": "Create a shortcut for a gh command",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "api",
+      "family": "api",
+      "description": "Make an authenticated GitHub API request",
+      "support": "manual",
+      "operation": null,
+      "scope": "Used internally for fixed GET checks during pr.create. Arbitrary REST/GraphQL requests are not exposed."
+    },
+    {
+      "program": "gh",
+      "command": "attestation",
+      "family": "attestation",
+      "description": "Work with artifact attestations",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "attestation download",
+      "family": "attestation",
+      "description": "Download an artifact's attestations for offline use",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "attestation trusted-root",
+      "family": "attestation",
+      "description": "Output trusted_root.jsonl contents, likely for offline verification",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "attestation verify",
+      "family": "attestation",
+      "description": "Verify an artifact's integrity using attestations",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "auth",
+      "family": "auth",
+      "description": "Authenticate gh and git with GitHub",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "auth login",
+      "family": "auth",
+      "description": "Log in to a GitHub account",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "auth logout",
+      "family": "auth",
+      "description": "Log out of a GitHub account",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "auth refresh",
+      "family": "auth",
+      "description": "Refresh stored authentication credentials",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "auth setup-git",
+      "family": "auth",
+      "description": "Setup git with GitHub CLI",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "auth status",
+      "family": "auth",
+      "description": "Display active account and authentication state on each known GitHub host",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "auth switch",
+      "family": "auth",
+      "description": "Switch active GitHub account",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "auth token",
+      "family": "auth",
+      "description": "Print the authentication token gh uses for a hostname and account",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "browse",
+      "family": "browse",
+      "description": "Open repositories, issues, pull requests, and more in the browser",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "cache",
+      "family": "cache",
+      "description": "Manage GitHub Actions caches",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "cache delete",
+      "family": "cache",
+      "description": "Delete GitHub Actions caches",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "cache list",
+      "family": "cache",
+      "description": "List GitHub Actions caches",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "co",
+      "family": "co",
+      "description": "Alias for \"pr checkout\"",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "codespace",
+      "family": "codespace",
+      "description": "Connect to and manage codespaces",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "codespace code",
+      "family": "codespace",
+      "description": "Open a codespace in Visual Studio Code",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "codespace cp",
+      "family": "codespace",
+      "description": "Copy files between local and remote file systems",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "codespace create",
+      "family": "codespace",
+      "description": "Create a codespace",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "codespace delete",
+      "family": "codespace",
+      "description": "Delete codespaces",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "codespace edit",
+      "family": "codespace",
+      "description": "Edit a codespace",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "codespace jupyter",
+      "family": "codespace",
+      "description": "Open a codespace in JupyterLab",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "codespace list",
+      "family": "codespace",
+      "description": "List codespaces",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "codespace logs",
+      "family": "codespace",
+      "description": "Access codespace logs",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "codespace ports",
+      "family": "codespace",
+      "description": "List ports in a codespace",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "codespace ports forward",
+      "family": "codespace",
+      "description": "Forward ports",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "codespace ports visibility",
+      "family": "codespace",
+      "description": "Change the visibility of the forwarded port",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "codespace rebuild",
+      "family": "codespace",
+      "description": "Rebuild a codespace",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "codespace ssh",
+      "family": "codespace",
+      "description": "SSH into a codespace",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "codespace stop",
+      "family": "codespace",
+      "description": "Stop a running codespace",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "codespace view",
+      "family": "codespace",
+      "description": "View details about a codespace",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "completion -s",
+      "family": "completion",
+      "description": "Generate shell completion scripts",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "config",
+      "family": "config",
+      "description": "Manage configuration for gh",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "config clear-cache",
+      "family": "config",
+      "description": "Clear the cli cache",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "config get",
+      "family": "config",
+      "description": "Print the value of a given configuration key",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "config list",
+      "family": "config",
+      "description": "Print a list of configuration keys and values",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "config set",
+      "family": "config",
+      "description": "Update configuration with a value for the given key",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "copilot",
+      "family": "copilot",
+      "description": "Run the GitHub Copilot CLI (preview)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "discussion",
+      "family": "discussion",
+      "description": "Work with GitHub Discussions (preview)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "discussion comment",
+      "family": "discussion",
+      "description": "Add, edit, or delete a comment or a reply on a discussion (preview)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "discussion create",
+      "family": "discussion",
+      "description": "Create a new discussion (preview)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "discussion edit",
+      "family": "discussion",
+      "description": "Edit a discussion (preview)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "discussion list",
+      "family": "discussion",
+      "description": "List discussions in a repository (preview)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "discussion view",
+      "family": "discussion",
+      "description": "View a discussion (preview)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "extension",
+      "family": "extension",
+      "description": "Manage gh extensions",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "extension browse",
+      "family": "extension",
+      "description": "Enter a UI for browsing, adding, and removing extensions",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "extension create",
+      "family": "extension",
+      "description": "Create a new extension",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "extension exec",
+      "family": "extension",
+      "description": "Execute an installed extension",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "extension install",
+      "family": "extension",
+      "description": "Install a gh extension from a repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "extension list",
+      "family": "extension",
+      "description": "List installed extension commands",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "extension remove",
+      "family": "extension",
+      "description": "Remove an installed extension",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "extension search",
+      "family": "extension",
+      "description": "Search extensions to the GitHub CLI",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "extension upgrade",
+      "family": "extension",
+      "description": "Upgrade installed extensions",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "gist",
+      "family": "gist",
+      "description": "Manage gists",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "gist clone",
+      "family": "gist",
+      "description": "Clone a gist locally",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "gist create",
+      "family": "gist",
+      "description": "Create a new gist",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "gist delete",
+      "family": "gist",
+      "description": "Delete a gist",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "gist edit",
+      "family": "gist",
+      "description": "Edit one of your gists",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "gist list",
+      "family": "gist",
+      "description": "List your gists",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "gist rename",
+      "family": "gist",
+      "description": "Rename a file in a gist",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "gist view",
+      "family": "gist",
+      "description": "View a gist",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "gpg-key",
+      "family": "gpg-key",
+      "description": "Manage GPG keys",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "gpg-key add",
+      "family": "gpg-key",
+      "description": "Add a GPG key to your GitHub account",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "gpg-key delete",
+      "family": "gpg-key",
+      "description": "Delete a GPG key from your GitHub account",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "gpg-key list",
+      "family": "gpg-key",
+      "description": "Lists GPG keys in your GitHub account",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "issue",
+      "family": "issue",
+      "description": "Manage issues",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "issue close",
+      "family": "issue",
+      "description": "Close issue",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "issue comment",
+      "family": "issue",
+      "description": "Add a comment to an issue",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "issue create",
+      "family": "issue",
+      "description": "Create a new issue",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "issue delete",
+      "family": "issue",
+      "description": "Delete issue",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "issue develop",
+      "family": "issue",
+      "description": "Manage linked branches for an issue",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "issue edit",
+      "family": "issue",
+      "description": "Edit issues",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "issue list",
+      "family": "issue",
+      "description": "List issues in a repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "issue lock",
+      "family": "issue",
+      "description": "Lock issue conversation",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "issue pin",
+      "family": "issue",
+      "description": "Pin an issue",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "issue reopen",
+      "family": "issue",
+      "description": "Reopen issue",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "issue status",
+      "family": "issue",
+      "description": "Show status of relevant issues",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "issue transfer",
+      "family": "issue",
+      "description": "Transfer issue to another repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "issue unlock",
+      "family": "issue",
+      "description": "Unlock issue conversation",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "issue unpin",
+      "family": "issue",
+      "description": "Unpin an issue",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "issue view",
+      "family": "issue",
+      "description": "View an issue",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "label",
+      "family": "label",
+      "description": "Manage labels",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "label clone",
+      "family": "label",
+      "description": "Clones labels from one repository to another",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "label create",
+      "family": "label",
+      "description": "Create a new label",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "label delete",
+      "family": "label",
+      "description": "Delete a label from a repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "label edit",
+      "family": "label",
+      "description": "Edit a label",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "label list",
+      "family": "label",
+      "description": "List labels in a repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "licenses",
+      "family": "licenses",
+      "description": "View third-party license information",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "org",
+      "family": "org",
+      "description": "Manage organizations",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "org list",
+      "family": "org",
+      "description": "List organizations for the authenticated user.",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "pr",
+      "family": "pr",
+      "description": "Manage pull requests",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "pr checkout",
+      "family": "pr",
+      "description": "Check out a pull request in git",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "pr checks",
+      "family": "pr",
+      "description": "Show CI status for a single pull request",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "pr close",
+      "family": "pr",
+      "description": "Close a pull request",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "pr comment",
+      "family": "pr",
+      "description": "Add a comment to a pull request",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "pr create",
+      "family": "pr",
+      "description": "Create a pull request",
+      "support": "typed_mcp",
+      "operation": "pr.create",
+      "scope": "Same-repository github.com pull request following its exact push; explicit base/head/title/body/draft; no forks, reviewers or attachments."
+    },
+    {
+      "program": "gh",
+      "command": "pr diff",
+      "family": "pr",
+      "description": "View changes in a pull request",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "pr edit",
+      "family": "pr",
+      "description": "Edit a pull request",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "pr list",
+      "family": "pr",
+      "description": "List pull requests in a repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "pr lock",
+      "family": "pr",
+      "description": "Lock pull request conversation",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "pr merge",
+      "family": "pr",
+      "description": "Merge a pull request",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "pr ready",
+      "family": "pr",
+      "description": "Mark a pull request as ready for review",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "pr reopen",
+      "family": "pr",
+      "description": "Reopen a pull request",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "pr revert",
+      "family": "pr",
+      "description": "Revert a pull request",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "pr review",
+      "family": "pr",
+      "description": "Add a review to a pull request",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "pr status",
+      "family": "pr",
+      "description": "Show status of relevant pull requests",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "pr unlock",
+      "family": "pr",
+      "description": "Unlock pull request conversation",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "pr update-branch",
+      "family": "pr",
+      "description": "Update a pull request branch",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "pr view",
+      "family": "pr",
+      "description": "View a pull request",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "preview",
+      "family": "preview",
+      "description": "Execute previews for gh features",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "preview prompter",
+      "family": "preview",
+      "description": "Execute a test program to preview the prompter",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "project",
+      "family": "project",
+      "description": "Work with GitHub Projects.",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "project close",
+      "family": "project",
+      "description": "Close a project",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "project copy",
+      "family": "project",
+      "description": "Copy a project",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "project create",
+      "family": "project",
+      "description": "Create a project",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "project delete",
+      "family": "project",
+      "description": "Delete a project",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "project edit",
+      "family": "project",
+      "description": "Edit a project",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "project field-create",
+      "family": "project",
+      "description": "Create a field in a project",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "project field-delete",
+      "family": "project",
+      "description": "Delete a field in a project",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "project field-list",
+      "family": "project",
+      "description": "List the fields in a project",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "project item-add",
+      "family": "project",
+      "description": "Add a pull request or an issue to a project",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "project item-archive",
+      "family": "project",
+      "description": "Archive an item in a project",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "project item-create",
+      "family": "project",
+      "description": "Create a draft issue item in a project",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "project item-delete",
+      "family": "project",
+      "description": "Delete an item from a project by ID",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "project item-edit",
+      "family": "project",
+      "description": "Edit an item in a project",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "project item-list",
+      "family": "project",
+      "description": "List the items in a project",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "project link",
+      "family": "project",
+      "description": "Link a project to a repository or a team",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "project list",
+      "family": "project",
+      "description": "List the projects for an owner",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "project mark-template",
+      "family": "project",
+      "description": "Mark a project as a template",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "project unlink",
+      "family": "project",
+      "description": "Unlink a project from a repository or a team",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "project view",
+      "family": "project",
+      "description": "View a project",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "release",
+      "family": "release",
+      "description": "Manage releases",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "release create",
+      "family": "release",
+      "description": "Create a new release",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "release delete",
+      "family": "release",
+      "description": "Delete a release",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "release delete-asset",
+      "family": "release",
+      "description": "Delete an asset from a release",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "release download",
+      "family": "release",
+      "description": "Download release assets",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "release edit",
+      "family": "release",
+      "description": "Edit a release",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "release list",
+      "family": "release",
+      "description": "List releases in a repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "release upload",
+      "family": "release",
+      "description": "Upload assets to a release",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "release verify",
+      "family": "release",
+      "description": "Verify the attestation for a release",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "release verify-asset",
+      "family": "release",
+      "description": "Verify that a given asset originated from a release",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "release view",
+      "family": "release",
+      "description": "View information about a release",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo",
+      "family": "repo",
+      "description": "Manage repositories",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo archive",
+      "family": "repo",
+      "description": "Archive a repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo autolink",
+      "family": "repo",
+      "description": "Manage autolink references",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo autolink create",
+      "family": "repo",
+      "description": "Create a new autolink reference",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo autolink delete",
+      "family": "repo",
+      "description": "Delete an autolink reference",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo autolink list",
+      "family": "repo",
+      "description": "List autolink references for a GitHub repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo autolink view",
+      "family": "repo",
+      "description": "View an autolink reference",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo clone",
+      "family": "repo",
+      "description": "Clone a repository locally",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo create",
+      "family": "repo",
+      "description": "Create a new repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo delete",
+      "family": "repo",
+      "description": "Delete a repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo deploy-key",
+      "family": "repo",
+      "description": "Manage deploy keys in a repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo deploy-key add",
+      "family": "repo",
+      "description": "Add a deploy key to a GitHub repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo deploy-key delete",
+      "family": "repo",
+      "description": "Delete a deploy key from a GitHub repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo deploy-key list",
+      "family": "repo",
+      "description": "List deploy keys in a GitHub repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo edit",
+      "family": "repo",
+      "description": "Edit repository settings",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo fork",
+      "family": "repo",
+      "description": "Create a fork of a repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo gitignore",
+      "family": "repo",
+      "description": "List and view available repository gitignore templates",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo gitignore list",
+      "family": "repo",
+      "description": "List available repository gitignore templates",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo gitignore view",
+      "family": "repo",
+      "description": "View an available repository gitignore template",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo license",
+      "family": "repo",
+      "description": "Explore repository licenses",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo license list",
+      "family": "repo",
+      "description": "List common repository licenses",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo license view",
+      "family": "repo",
+      "description": "View a specific repository license",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo list",
+      "family": "repo",
+      "description": "List repositories owned by user or organization",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo read-dir",
+      "family": "repo",
+      "description": "List a directory in a repository (preview)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo read-file",
+      "family": "repo",
+      "description": "Read a file from a repository (preview)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo rename",
+      "family": "repo",
+      "description": "Rename a repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo set-default",
+      "family": "repo",
+      "description": "Configure default repository for this directory",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo sync",
+      "family": "repo",
+      "description": "Sync a repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo unarchive",
+      "family": "repo",
+      "description": "Unarchive a repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "repo view",
+      "family": "repo",
+      "description": "View a repository",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "ruleset",
+      "family": "ruleset",
+      "description": "View info about repo rulesets",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "ruleset check",
+      "family": "ruleset",
+      "description": "View rules that would apply to a given branch",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "ruleset list",
+      "family": "ruleset",
+      "description": "List rulesets for a repository or organization",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "ruleset view",
+      "family": "ruleset",
+      "description": "View information about a ruleset",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "run",
+      "family": "run",
+      "description": "View details about workflow runs",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "run cancel",
+      "family": "run",
+      "description": "Cancel a workflow run",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "run delete",
+      "family": "run",
+      "description": "Delete a workflow run",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "run download",
+      "family": "run",
+      "description": "Download artifacts generated by a workflow run",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "run list",
+      "family": "run",
+      "description": "List recent workflow runs",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "run rerun",
+      "family": "run",
+      "description": "Rerun a run",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "run view",
+      "family": "run",
+      "description": "View a summary of a workflow run",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "run watch",
+      "family": "run",
+      "description": "Watch a run until it completes, showing its progress",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "search",
+      "family": "search",
+      "description": "Search for repositories, issues, and pull requests",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "search code",
+      "family": "search",
+      "description": "Search within code",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "search commits",
+      "family": "search",
+      "description": "Search for commits",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "search issues",
+      "family": "search",
+      "description": "Search for issues",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "search prs",
+      "family": "search",
+      "description": "Search for pull requests",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "search repos",
+      "family": "search",
+      "description": "Search for repositories",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "secret",
+      "family": "secret",
+      "description": "Manage GitHub secrets",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "secret delete",
+      "family": "secret",
+      "description": "Delete secrets",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "secret list",
+      "family": "secret",
+      "description": "List secrets",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "secret set",
+      "family": "secret",
+      "description": "Create or update secrets",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "skill",
+      "family": "skill",
+      "description": "Install and manage agent skills (preview)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "skill install",
+      "family": "skill",
+      "description": "Install agent skills from a GitHub repository (preview)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "skill list",
+      "family": "skill",
+      "description": "List installed skills (preview)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "skill preview",
+      "family": "skill",
+      "description": "Preview a skill from a GitHub repository (preview)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "skill publish",
+      "family": "skill",
+      "description": "Validate and publish skills to a GitHub repository (preview)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "skill search",
+      "family": "skill",
+      "description": "Search for skills across GitHub (preview)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "skill update",
+      "family": "skill",
+      "description": "Update installed skills to their latest versions (preview)",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "ssh-key",
+      "family": "ssh-key",
+      "description": "Manage SSH keys",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "ssh-key add",
+      "family": "ssh-key",
+      "description": "Add an SSH key to your GitHub account",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "ssh-key delete",
+      "family": "ssh-key",
+      "description": "Delete an SSH key from your GitHub account",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "ssh-key list",
+      "family": "ssh-key",
+      "description": "Lists SSH keys in your GitHub account",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "status",
+      "family": "status",
+      "description": "Print information about relevant issues, pull requests, and notifications across repositories",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "variable",
+      "family": "variable",
+      "description": "Manage GitHub Actions variables",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "variable delete",
+      "family": "variable",
+      "description": "Delete variables",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "variable get",
+      "family": "variable",
+      "description": "Get variables",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "variable list",
+      "family": "variable",
+      "description": "List variables",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "variable set",
+      "family": "variable",
+      "description": "Create or update variables",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "workflow",
+      "family": "workflow",
+      "description": "View details about GitHub Actions workflows",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "workflow disable",
+      "family": "workflow",
+      "description": "Disable a workflow",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "workflow enable",
+      "family": "workflow",
+      "description": "Enable a workflow",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "workflow list",
+      "family": "workflow",
+      "description": "List workflows",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "workflow run",
+      "family": "workflow",
+      "description": "Run a workflow by creating a workflow_dispatch event",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    },
+    {
+      "program": "gh",
+      "command": "workflow view",
+      "family": "workflow",
+      "description": "View the summary of a workflow",
+      "support": "manual",
+      "operation": null,
+      "scope": "Not executable through MCP. Requires a manual step or a future typed adapter."
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+Provider glyphs: @lobehub/icons-static-svg 1.101.0, https://github.com/lobehub/lobe-icons (MIT; license included). Brand names and marks identify the selected client; classification is user-selected and does not verify a model identity or imply endorsement.
