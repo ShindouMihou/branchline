@@ -9,6 +9,16 @@ pub struct Detail {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub message: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub operation: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub include_untracked: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stash_ref: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub base_ref: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub upstream_ref: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub files: Option<Vec<String>>,
     #[serde(default)]
     pub file_previews: Vec<FileSelection>,
@@ -95,6 +105,11 @@ impl Detail {
             kind: kind.into(),
             title: title.into(),
             message: None,
+            operation: None,
+            include_untracked: None,
+            stash_ref: None,
+            base_ref: None,
+            upstream_ref: None,
             files: None,
             file_previews: Vec::new(),
             source_branch: None,
@@ -121,6 +136,22 @@ impl Detail {
             evidence_kind: "command".into(),
         }
     }
+    pub(super) fn hide_runtime_values(&mut self, marker: &str) {
+        for field in [&mut self.message, &mut self.operation, &mut self.stash_ref, &mut self.base_ref, &mut self.upstream_ref, &mut self.source_branch, &mut self.target_branch, &mut self.remote, &mut self.base_branch, &mut self.head_branch, &mut self.pull_request_title, &mut self.body, &mut self.working_directory, &mut self.repository, &mut self.visibility, &mut self.source_directory, &mut self.tag, &mut self.release_title, &mut self.notes_file] {
+            if field.as_ref().is_some_and(|value| value.contains(marker)) { *field = None; }
+        }
+        for field in [&mut self.files, &mut self.topics, &mut self.assets] {
+            if field.as_ref().is_some_and(|values| values.iter().any(|value| value.contains(marker))) { *field = None; }
+        }
+        self.file_previews.clear();
+        let before = self.push_targets.len();
+        self.push_targets.retain(|target| !target.source_ref.contains(marker) && !target.target_ref.contains(marker));
+        self.push_targets_incomplete |= self.push_targets.len() != before;
+        for warning in &mut self.warnings { *warning = warning.replace(marker, "<runtime value>"); }
+        self.evidence_kind = "unknown".into();
+        self.warnings.push("Runtime expressions may execute additional commands or change argument values and boundaries. They are not evaluated by this preview.".into());
+    }
+
     pub(super) fn unavailable(command_index: usize, warning: &str) -> Self {
         let mut detail = Self::new(command_index, "details_unavailable", "Review exact command");
         detail.warnings.push(warning.into());

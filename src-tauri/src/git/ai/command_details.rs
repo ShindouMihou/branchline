@@ -1,4 +1,7 @@
 mod push;
+mod history;
+#[cfg(test)]
+mod history_tests;
 mod literal;
 mod shell;
 mod staging;
@@ -416,6 +419,7 @@ pub fn inspect(root: &Path, steps: &[CommandStep]) -> Result<Vec<Detail>, String
                 }
             };
             let words = literal::identity_command(&words).unwrap_or(words);
+            let runtime_arguments = words.iter().any(|word| word.contains(shell::RUNTIME_ARGUMENT));
             if let [program, path] = words.as_slice() {
                 if program == "cd" && Path::new(path).is_absolute() {
                     context_uncertain = true;
@@ -446,6 +450,9 @@ pub fn inspect(root: &Path, steps: &[CommandStep]) -> Result<Vec<Detail>, String
                     [program, command, args @ ..] if program == "git" && command == "add" => {
                         stage(args, command_index, &mut state, root)
                     }
+                    [program, command, args @ ..] if program == "git" && matches!(command.as_str(), "stash" | "rebase" | "reset") => {
+                        history::inspect(command, args, command_index, &state).unwrap_or_else(|| Detail::unavailable(command_index, "Review this Git operation in the exact command."))
+                    }
                     [program, command, args @ ..] if program == "git" && command == "push" => {
                         push::inspect(Some(root), args, command_index, &state)
                     }
@@ -473,6 +480,11 @@ pub fn inspect(root: &Path, steps: &[CommandStep]) -> Result<Vec<Detail>, String
                     }
                 }
             };
+            if runtime_arguments {
+                detail.hide_runtime_values(shell::RUNTIME_ARGUMENT);
+                state.branch = None;
+                state.index_uncertain = true;
+            }
             if detail.working_directory.is_none() {
                 detail.working_directory = requested_directory.clone();
             }
@@ -485,7 +497,11 @@ pub fn inspect(root: &Path, steps: &[CommandStep]) -> Result<Vec<Detail>, String
             }
             if detail.kind == "details_unavailable" {
                 state.branch = None;
+                state.staged.clear();
+                state.projected.clear();
+                state.projected_scope_uncertain = true;
                 state.index_uncertain = true;
+                literal_only = true;
             }
             if state.previous {
                 if detail.evidence_kind != "unknown" {
@@ -514,12 +530,13 @@ pub fn inspect(root: &Path, steps: &[CommandStep]) -> Result<Vec<Detail>, String
 mod tests;
 
 pub(super) fn argument_commands(step: &CommandStep) -> Vec<Vec<String>> {
-    if step.program == "shell" {
+    let commands = if step.program == "shell" {
         step.argv.get(1).and_then(|script| shell::preview(script).ok())
             .unwrap_or_default().into_iter().filter_map(Result::ok).collect()
     } else {
         literal_commands(step).unwrap_or_default()
-    }
+    };
+    commands.into_iter().map(literal::normalize_arguments).collect()
 }
 
 pub(super) fn literal_commands(step: &CommandStep) -> Option<Vec<Vec<String>>> {

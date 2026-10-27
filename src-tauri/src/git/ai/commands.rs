@@ -168,12 +168,25 @@ fn nonblocking(pipe: &impl AsRawFd) -> Result<(), String> {
     Ok(())
 }
 
+#[cfg(test)]
 fn drain(pipe: &mut impl Read, output: &mut Vec<u8>, truncated: &mut bool) -> Result<(), String> {
+    drain_with_tail(pipe, output, truncated, &mut Vec::new()).map(|_| ())
+}
+
+fn drain_with_tail(pipe: &mut impl Read, output: &mut Vec<u8>, truncated: &mut bool, tail: &mut Vec<u8>) -> Result<usize, String> {
+    let mut read = 0;
     let mut chunk = [0; 8192];
     for _ in 0..32 {
         match pipe.read(&mut chunk) {
             Ok(0) => break,
             Ok(n) => {
+                read += n;
+                tail.extend_from_slice(&chunk[..n]);
+                if tail.len() > OUTPUT_LIMIT {
+                    let excess = tail.len() - OUTPUT_LIMIT;
+                    tail.copy_within(excess.., 0);
+                    tail.truncate(OUTPUT_LIMIT);
+                }
                 let kept = n.min(OUTPUT_LIMIT.saturating_sub(output.len()));
                 output.extend_from_slice(&chunk[..kept]);
                 *truncated |= kept < n;
@@ -185,7 +198,7 @@ fn drain(pipe: &mut impl Read, output: &mut Vec<u8>, truncated: &mut bool) -> Re
             }
         }
     }
-    Ok(())
+    Ok(read)
 }
 
 fn stop(child: &mut std::process::Child) {
@@ -196,7 +209,14 @@ fn stop(child: &mut std::process::Child) {
     let _ = child.wait();
 }
 
+pub type OutputObserver<'a> = dyn FnMut(&[u8], &[u8], bool, bool) + 'a;
+
+#[cfg(test)]
 fn run(root: &Path, executable: &Path, step: &CommandStep) -> Result<Value, String> {
+    run_with_output(root, executable, step, &mut |_, _, _, _| {})
+}
+
+fn run_with_output(root: &Path, executable: &Path, step: &CommandStep, output: &mut OutputObserver<'_>) -> Result<Value, String> {
     let mut command = Command::new(executable);
     command
         .current_dir(root)
@@ -243,12 +263,23 @@ fn run(root: &Path, executable: &Path, step: &CommandStep) -> Result<Value, Stri
         let mut written = 0;
         let mut out = Vec::new();
         let mut err = Vec::new();
+        let (mut out_tail, mut err_tail) = (Vec::new(), Vec::new());
+        let (mut out_read, mut err_read) = (0, 0);
         let (mut out_truncated, mut err_truncated) = (false, false);
         let deadline = Instant::now() + Duration::from_secs(step.timeout_seconds.unwrap_or(120));
         let mut timed_out = false;
+        let mut reported = (0, 0, false, false);
+        let mut last_output = Instant::now();
+        output(&out, &err, false, false);
         let status = loop {
-            drain(&mut stdout, &mut out, &mut out_truncated)?;
-            drain(&mut stderr, &mut err, &mut err_truncated)?;
+            out_read += drain_with_tail(&mut stdout, &mut out, &mut out_truncated, &mut out_tail)?;
+            err_read += drain_with_tail(&mut stderr, &mut err, &mut err_truncated, &mut err_tail)?;
+            let captured = (out_read, err_read, out_truncated, err_truncated);
+            if captured != reported && last_output.elapsed() >= Duration::from_millis(200) {
+                output(&out_tail, &err_tail, out_truncated, err_truncated);
+                reported = captured;
+                last_output = Instant::now();
+            }
             if let Some(pipe) = stdin.as_mut() {
                 if written < input.len() {
                     match pipe.write(&input[written..input.len().min(written + 8192)]) {
@@ -285,8 +316,9 @@ fn run(root: &Path, executable: &Path, step: &CommandStep) -> Result<Value, Stri
             }
             std::thread::sleep(Duration::from_millis(10));
         };
-        drain(&mut stdout, &mut out, &mut out_truncated)?;
-        drain(&mut stderr, &mut err, &mut err_truncated)?;
+        drain_with_tail(&mut stdout, &mut out, &mut out_truncated, &mut out_tail)?;
+        drain_with_tail(&mut stderr, &mut err, &mut err_truncated, &mut err_tail)?;
+        output(&out_tail, &err_tail, out_truncated, err_truncated);
         Ok(
             json!({"exitCode":status.code(),"processSucceeded":status.success()&&!timed_out,"timedOut":timed_out,"stdout":String::from_utf8_lossy(&out),"stderr":String::from_utf8_lossy(&err),"stdoutCapturedBytes":out.len(),"stderrCapturedBytes":err.len(),"stdoutCapturedDigest":format!("{:x}",Sha256::digest(&out)),"stderrCapturedDigest":format!("{:x}",Sha256::digest(&err)),"stdoutTruncated":out_truncated,"stderrTruncated":err_truncated,"effectsVerified":false,"verification":"unverified"}),
         )
@@ -297,11 +329,22 @@ fn run(root: &Path, executable: &Path, step: &CommandStep) -> Result<Value, Stri
     outcome
 }
 
+#[cfg(test)]
 pub fn execute(
     root: &Path,
     step: &CommandStep,
     manifest: &Manifest,
     log: &mut CommandLog<'_>,
+) -> Result<Value, String> {
+    execute_with_output(root, step, manifest, log, &mut |_, _, _, _| {})
+}
+
+pub fn execute_with_output(
+    root: &Path,
+    step: &CommandStep,
+    manifest: &Manifest,
+    log: &mut CommandLog<'_>,
+    output: &mut OutputObserver<'_>,
 ) -> Result<Value, String> {
     step.validate()?;
     let root =
@@ -329,7 +372,7 @@ pub fn execute(
         false,
         None,
     )?;
-    let result = run(&root, Path::new(&binding.path), step);
+    let result = run_with_output(&root, Path::new(&binding.path), step, output);
     let outcome = match &result {
         Ok(value) if value["processSucceeded"] == true => "process_succeeded_unverified",
         _ => "failed_or_uncertain",
@@ -355,6 +398,37 @@ mod tests {
             timeout_seconds: None,
         }
     }
+    #[test]
+    fn streams_output_before_exit_and_keeps_nonzero_result() {
+        let root = tempfile::tempdir().unwrap();
+        let mut saw_live = false;
+        let result = run_with_output(root.path(), Path::new("/bin/sh"), &step("shell", &["-c", "printf begin; sleep 1; printf end >&2; exit 7"]), &mut |out, err, _, _| {
+            if out == b"begin" && err.is_empty() {
+                saw_live = true;
+            }
+        }).unwrap();
+        assert!(saw_live);
+        assert_eq!(result["stdout"], "begin");
+        assert_eq!(result["stderr"], "end");
+        assert_eq!(result["exitCode"], 7);
+        assert_eq!(result["processSucceeded"], false);
+    }
+
+    #[test]
+    fn native_stream_retains_late_diagnostics_after_capture_limit() {
+        let mut bytes = vec![b'a'; OUTPUT_LIMIT + 100];
+        bytes.extend_from_slice(b"late failure");
+        let mut prefix = Vec::new();
+        let mut tail = Vec::new();
+        let mut cut = false;
+        drain_with_tail(&mut std::io::Cursor::new(bytes), &mut prefix, &mut cut, &mut tail).unwrap();
+        assert_eq!(prefix.len(), OUTPUT_LIMIT);
+        assert_eq!(tail.len(), OUTPUT_LIMIT);
+        assert!(tail.ends_with(b"late failure"));
+        assert!(!prefix.ends_with(b"late failure"));
+        assert!(cut);
+    }
+
     #[test]
     fn accepts_broad_commands_but_rejects_invalid_envelopes() {
         for args in [

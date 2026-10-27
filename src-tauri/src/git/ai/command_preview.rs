@@ -12,7 +12,7 @@ pub(super) fn command_preview(root: &Path, steps: &[Step]) -> Result<Preview, St
         code: "unverified_commands".into(), title: "Approve exact commands".into(),
         detail: "These commands run with your account's permissions. They may change files, history, GitHub settings, or other repositories and may invoke configured hooks, aliases, extensions, and helpers. Branchline checks process outcomes, not their complete effects. Review every argument and input.".into(),
     }];
-    let groups = commands.iter().filter_map(command_details::literal_commands).flatten().collect::<Vec<_>>();
+    let literal_sequence = commands.iter().all(|step| command_details::literal_commands(step).is_some());
     let arguments = commands.iter().flat_map(command_details::argument_commands).collect::<Vec<_>>();
     let pushes = arguments.iter().filter(|words| words.first().is_some_and(|p| p == "git") && words.get(1).is_some_and(|p| p == "push")).collect::<Vec<_>>();
     if pushes.iter().any(|words| words.iter().skip(2).any(|arg| {
@@ -24,14 +24,14 @@ pub(super) fn command_preview(root: &Path, steps: &[Step]) -> Result<Preview, St
     if arguments.iter().any(|words| words.iter().skip(1).any(|arg| matches!(arg.as_str(), "--force" | "-f" | "--hard" | "--mirror" | "--delete" | "delete") || arg.starts_with("--force-with-lease"))) {
         risks.push(RiskFlag { code: "destructive_command_argument".into(), title: "Potentially destructive command".into(), detail: "The request includes force, deletion, mirror, or hard-reset arguments. Completed effects may be irreversible.".into() });
     }
-    let mut source = txt(root, &["symbolic-ref", "--quiet", "--short", "HEAD"]).ok();
-    let initial_branch = source.clone().unwrap_or_default();
+    let initial_branch = txt(root, &["symbolic-ref", "--quiet", "--short", "HEAD"]).unwrap_or_default();
+    let mut source = literal_sequence.then(|| initial_branch.clone());
     let mut mismatch = None;
-    for words in &groups {
+    for words in &arguments {
         match words.as_slice() {
             [program, action, args @ ..] if program == "git" && matches!(action.as_str(), "switch" | "checkout") => {
                 let offset = usize::from(args.first().is_some_and(|arg| matches!(arg.as_str(), "-c" | "-C" | "-b" | "-B")));
-                source = args.get(offset).filter(|arg| !arg.starts_with('-')).cloned();
+                source = if literal_sequence { args.get(offset).filter(|arg| !arg.starts_with('-')).cloned() } else { None };
             }
             [program, action, args @ ..] if program == "git" && action == "push" => {
                 for argument in args {

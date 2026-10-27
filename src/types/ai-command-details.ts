@@ -3,6 +3,11 @@ export interface AiCommandDetail {
   kind: string;
   title: string;
   message?: string;
+  operation?: string;
+  includeUntracked?: boolean;
+  stashRef?: string;
+  baseRef?: string;
+  upstreamRef?: string;
   files?: string[];
   filePreviews?: {path:string;source:'index'|'worktree'}[];
   evidenceKind?: 'current_snapshot'|'projected'|'command'|'unknown';

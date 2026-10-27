@@ -108,19 +108,13 @@ mod tests {
     }
 }
 
-mod clauses;
+pub(super) const RUNTIME_ARGUMENT: &str = "\0branchline_runtime\0";
+mod ast;
+mod wrappers;
+#[cfg(test)]
+mod ast_tests;
 pub(super) fn preview(script: &str) -> Result<Vec<Result<Vec<String>, String>>, String> {
-    if let Ok(commands) = split(script) {
-        return Ok(commands.into_iter().map(Ok).collect());
-    }
-    let mut commands = Vec::new();
-    for clause in clauses::split(script)? {
-        match split(clause) {
-            Ok(words) => commands.extend(words.into_iter().map(Ok)),
-            Err(error) => commands.push(Err(error)),
-        }
-    }
-    Ok(commands)
+    ast::preview(script)
 }
 
 #[cfg(test)]
@@ -135,32 +129,53 @@ mod recovery_tests {
             "\"$((1 + (2 * 3)))\"",
         ] {
             let commands = preview(&format!("test {expression} = ready && git commit -m Actual")).unwrap();
-            assert_eq!(commands.len(), 2);
             assert!(commands[0].is_err());
-            assert_eq!(commands[1].as_ref().unwrap(), &["git", "commit", "-m", "Actual"]);
+            assert_eq!(commands.last().unwrap().as_ref().unwrap(), &["git", "commit", "-m", "Actual"]);
         }
     }
     #[test]
-    fn ambiguous_compound_syntax_remains_wholly_unavailable() {
+    fn malformed_shell_syntax_remains_wholly_unavailable() {
         for script in [
-            "test \"$VALUE\" && if true; then git push origin fake; fi",
-            "cat <<'EOF'\ngit push origin fake\nEOF\ngit commit -m Actual",
-            "test \"$(cat <<EOF\ngit push origin fake\nEOF\n)\" && git commit -m Actual",
-            "test \"$VALUE\" && (git push origin fake)",
-            "test \"$VALUE\" && f() { git push origin fake; }",
-            "test `echo hidden` && git push origin fake",
-            "test \"$VALUE\" | cat; git push origin fake",
-            "test \"$VALUE\" || git push origin fake",
             "test \"$(echo unfinished\" && git push origin fake",
-            "test \"$VALUE\" & git push origin fake",
+            "if true; then git push origin fake",
+            "git push origin fake &&",
         ] { assert!(preview(script).is_err(), "{script}"); }
     }
     #[test]
     fn comments_and_continuations_do_not_create_extra_actions() {
         let commands = preview("test \"$(printf ready # && git push origin hidden\n)\" = ready &&\\\n git commit -m 'Actual' # && git push origin hidden\n").unwrap();
-        assert_eq!(commands.len(), 2);
-        assert_eq!(commands[1].as_ref().unwrap(), &["git", "commit", "-m", "Actual"]);
+        assert!(commands.iter().any(Result::is_err));
+        assert_eq!(commands.last().unwrap().as_ref().unwrap(), &["git", "commit", "-m", "Actual"]);
         let deeply_nested = format!("test \"{}echo ready{}\" && git push origin hidden", "$(".repeat(40), ")".repeat(40));
-        assert!(preview(&deeply_nested).is_err());
+        let commands = preview(&deeply_nested).unwrap();
+        assert!(commands.iter().any(Result::is_err));
+        assert!(commands.iter().filter_map(|entry| entry.as_ref().ok()).any(|words| words == &["git", "push", "origin", "hidden"]));
+    }
+}
+
+#[cfg(test)]
+mod redirected_tests {
+    use super::*;
+    #[test]
+    fn redirection_targets_never_become_preview_commands() {
+        for script in [
+            "node check > '/tmp/log && git push origin hidden' 2>&1 && git commit -m Actual",
+            "node check >>\"$(printf '%s' 'fake && git push origin hidden')\" 2>&1 && git commit -m Actual",
+        ] {
+            let commands = preview(script).unwrap();
+            assert!(commands.iter().any(Result::is_err));
+            let commands = commands.into_iter().filter_map(Result::ok).collect::<Vec<_>>();
+            assert_eq!(commands.last().unwrap(), &["git", "commit", "-m", "Actual"]);
+            assert!(!commands.iter().any(|words| words == &["git", "push", "origin", "hidden"]));
+        }
+        let commands = preview("cat <<EOF\ngit push origin hidden\nEOF").unwrap();
+        assert!(commands.iter().filter_map(|entry| entry.as_ref().ok()).all(|words| words != &["git", "push", "origin", "hidden"]));
+    }
+
+    #[test]
+    fn redirected_checks_keep_later_commit_and_push_visible() {
+        let commands = preview("test \"$(git rev-parse HEAD)\" = expected && node -e 'run()' > /tmp/check.log 2>&1 && git commit -m 'Actual commit' && git push origin HEAD:feature").unwrap();
+        assert!(commands.iter().any(|entry| entry.as_ref().is_ok_and(|words| words == &["git", "commit", "-m", "Actual commit"])));
+        assert!(commands.iter().any(|entry| entry.as_ref().is_ok_and(|words| words == &["git", "push", "origin", "HEAD:feature"])));
     }
 }

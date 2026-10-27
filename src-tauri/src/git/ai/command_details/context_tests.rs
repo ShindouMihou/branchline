@@ -106,10 +106,9 @@ fn identity_only_configuration_preserves_safe_index_previews_but_context_overrid
 #[test]
 fn relative_directory_context_stays_unknown_and_options_respect_terminators() {
     let root = repository();
-    assert!(inspect(root.path(), &[shell("cd elsewhere && git commit -m Save")])
-        .unwrap()
-        .iter()
-        .all(|detail| detail.kind == "details_unavailable"));
+    let relative = inspect(root.path(), &[shell("cd elsewhere && git commit -m Save")]).unwrap();
+    assert!(relative.iter().any(|detail| detail.message.as_deref() == Some("Save")));
+    assert!(relative.iter().all(|detail| detail.files.is_none() && detail.file_previews.is_empty() && detail.source_branch.is_none()));
     let details=inspect(root.path(),&[shell("gh repo create owner/project -- --public --source /private && gh repo edit owner/project -- --add-topic hidden")]).unwrap();
     assert!(details[0].visibility.is_none());
     assert!(details[0].source_directory.is_none());

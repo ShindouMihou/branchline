@@ -53,7 +53,7 @@ fn response(plan: Value, elapsed: Duration, timed_out: bool) -> Value {
         })
         .and_then(|step| step["result"]["pullRequestUrl"].as_str())
         .map(str::to_owned);
-    json!({"schemaVersion":1,"planId":plan["id"],"status":status,"waitOutcome":outcome,"timedOut":outcome=="timed_out","terminal":terminal,"succeeded":succeeded,"effectsVerified":effects_verified,"grantsApproval":false,"waitedMs":elapsed.as_millis() as u64,"pullRequestUrl":url,"message":match outcome{"timed_out"=>"Still waiting. A timeout grants no approval and is not completion. Continue waiting on this same plan; do not resubmit or execute it elsewhere.","finished" if command_workflow=>"Report the actual process exit codes and per-step results. A succeeded command means its process exited successfully; its Git, GitHub, shell, hook, or external effects were not independently verified. Do not infer a pull request URL from arbitrary output.","finished"=>"Report the actual plan and per-step results. Only succeeded steps completed; report a pull request URL only when returned in verified results.",_=>"This plan needs attention. Report the issue; do not treat it as approved or completed."},"plan":plan})
+    json!({"schemaVersion":1,"planId":plan["id"],"status":status,"waitOutcome":outcome,"timedOut":outcome=="timed_out","terminal":terminal,"succeeded":succeeded,"effectsVerified":effects_verified,"grantsApproval":false,"waitedMs":elapsed.as_millis() as u64,"pullRequestUrl":url,"message":match outcome{"timed_out"=>"Still waiting. A timeout grants no approval and is not completion. Continue waiting on this same plan; do not resubmit or execute it elsewhere.","finished" if command_workflow&&!succeeded=>"This command request did not succeed. Report its actual exit code and which effects were independently checked. Earlier actions may have completed. A later recovery request has its own result and does not turn this request into a success. Do not retry without a new native approval.","finished" if command_workflow=>"Report the actual process exit codes and per-step results. A succeeded command means its process exited successfully; its Git, GitHub, shell, hook, or external effects were not independently verified. Do not infer a pull request URL from arbitrary output.","finished"=>"Report the actual plan and per-step results. Only succeeded steps completed; report a pull request URL only when returned in verified results.",_=>"This plan needs attention. Report the issue; do not treat it as approved or completed."},"plan":plan})
 }
 
 pub(super) fn run(shared: &Shared, credential: &Credential, args: Value) -> Result<Value, String> {
@@ -101,6 +101,14 @@ mod tests {
         assert_eq!(result["pullRequestUrl"], Value::Null);
         assert!(result["message"].as_str().unwrap().contains("process exited successfully"));
     }
+    #[test]
+    fn failed_chain_is_not_reported_as_success_after_separate_recovery() {
+        let failed = response(json!({"id":"original","status":"failed","requestedSteps":[{"kind":"command.execute"}],"execution":[{"kind":"command.execute","status":"failed","result":{"exitCode":1}}]}), Duration::ZERO, false);
+        assert_eq!(failed["succeeded"], false);
+        assert!(failed["message"].as_str().unwrap().contains("did not succeed"));
+        assert!(failed["message"].as_str().unwrap().contains("recovery request"));
+    }
+
     #[test]
     fn verified_pr_url_is_reported_without_turning_partial_success_into_full_success() {
         let plan = json!({"id":"p","status":"partially_completed","requestedSteps":[{},{}],"execution":[{"kind":"pr.create","status":"succeeded","result":{"pullRequestUrl":"https://github.com/owner/repo/pull/42"}}]});

@@ -10,6 +10,14 @@ This broad execution permission also permits other shell programs, filesystem ac
 
 Command availability is not universal success. Installed versions, dependencies, authentication, terminal requirements, external tools, provider permissions/policies, and timeouts still apply. Interactive editors and terminal-driven commands are not supported interactively. A successful final process exit is recorded; arbitrary effects are **not independently verified**. Shell operators govern internal failure behavior, so an earlier command can fail while a later command produces an exit code of zero.
 
+## Structured review coverage
+
+A pinned Tree-sitter Bash grammar parses shell syntax without executing it. Preparation commands, assignments, redirects, pipelines, conditional bodies, and supported literal `env`, `command`, and `sh -c` wrappers no longer discard recognizable later Git/GitHub arguments. Function definitions and data strings are not treated as executed commands. Syntax errors, parser limits, unsupported wrappers, and dynamic command names remain explicit unknowns.
+
+Cards describe requested arguments, not guaranteed effects. After an opaque expression, repository/file membership is not inferred from the starting repository. Runtime arguments stay unknown; the preview never runs substitutions, sources a script, reads environment secrets, or asks an AI to invent missing values. Conditional or repeated actions remain possible actions, with execution order/outcome unverified. Stash save/restore, rebase references, and reset modes have dedicated cards alongside commit, push, branch, repository, release, and pull-request creation details. New subcommands still execute through the same approval gate even when only the exact command can be shown.
+
+Live stdout and diagnostics are available only in the native app's memory, bounded to the latest 128 KiB per stream for eight recent commands. They are excluded from persisted receipts, MCP responses, exports, and Copy for AI. Redirected log files are not intercepted. A failed chain and a later successful recovery retain separate outcomes.
+
 ## Discovery and verification
 
 The machine-readable inventory remains `src-tauri/src/ai/command-catalog.json`, exposed through `branchline_command_catalog` with optional `program` and `command` filters. Its 381 built-in entries were captured on 2026-10-26. Historical per-entry typed/manual scopes describe the former adapters; the catalog response must separately identify exact-command approval as the current general execution path. Inventory absence does not deny command execution.

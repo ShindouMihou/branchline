@@ -2,6 +2,7 @@
 pub mod mcp;
 mod wait;
 mod review_signals;
+mod output;
 use crate::git::{
     self,
     ai::{Preview, Step},
@@ -245,6 +246,7 @@ pub struct Broker {
     pub operation_gate: Arc<Mutex<()>>,
     notifier: Option<Arc<dyn Fn(&str) + Send + Sync>>,
     focus_plan: Option<String>,
+    output: Arc<Mutex<output::OutputStore>>,
 }
 pub type Shared = Arc<Mutex<Broker>>;
 #[derive(Deserialize)]
@@ -427,6 +429,7 @@ impl Broker {
             operation_gate: Arc::new(Mutex::new(())),
             notifier: None,
             focus_plan: None,
+            output: Arc::new(Mutex::new(output::OutputStore::default())),
         }));
         broker.lock().map_err(|_| "Connector unavailable")?.save()?;
         let shared = broker.clone();
@@ -503,7 +506,8 @@ impl Broker {
     }
     fn native_status(&self, selected: Option<&str>) -> Value {
         let clients=self.journal.clients.iter().map(|c|json!({"id":c.id,"name":c.name,"repositories":c.repositories,"readSource":c.read_source,"provider":c.provider,"active":c.active,"createdAt":c.created_at})).collect::<Vec<_>>();
-        json!({"schemaVersion":SCHEMA,"enabled":self.journal.enabled,"autoOpen":self.journal.auto_open,"notifications":self.journal.notifications,"focusPlanId":self.focus_plan,"clients":clients,"plans":self.journal.plans.iter().rev().map(|p|{let mut v=Self::redacted(p,false); if selected!=Some(p.id.as_str()){v["preview"]=Value::Null; v["execution"]=json!([]);v["events"]=json!([]);} v}).collect::<Vec<_>>(),"selectedPlan":selected.and_then(|id|self.journal.plans.iter().find(|p|p.id==id)),"pending":self.journal.plans.iter().filter(|p|p.status=="pending_review").count()})
+        let command_outputs = self.output.lock().ok().and_then(|store| selected.map(|id| serde_json::to_value(store.snapshots(id)).unwrap_or(json!([])))).unwrap_or(json!([]));
+        json!({"commandOutputs":command_outputs,"schemaVersion":SCHEMA,"enabled":self.journal.enabled,"autoOpen":self.journal.auto_open,"notifications":self.journal.notifications,"focusPlanId":self.focus_plan,"clients":clients,"plans":self.journal.plans.iter().rev().map(|p|{let mut v=Self::redacted(p,false); if selected!=Some(p.id.as_str()){v["preview"]=Value::Null; v["execution"]=json!([]);v["events"]=json!([]);} v}).collect::<Vec<_>>(),"selectedPlan":selected.and_then(|id|self.journal.plans.iter().find(|p|p.id==id)),"pending":self.journal.plans.iter().filter(|p|p.status=="pending_review").count()})
     }
     pub fn set_notifier(&mut self, notify: Arc<dyn Fn(&str) + Send + Sync>) {
         self.notifier = Some(notify)
@@ -538,6 +542,8 @@ impl Broker {
                     b.focus_plan = previous_focus;
                     return Err(error);
                 }
+                let retained = b.journal.plans.iter().map(|plan| plan.id.clone()).collect::<Vec<_>>();
+                if let Ok(mut output) = b.output.lock() { output.retain(&retained); }
                 return Ok(json!({"cleared":cleared}));
             }
             Native::ReviewDiff { plan_id, detail_index, path } => {
@@ -1265,7 +1271,8 @@ fn execute(shared: &Shared, id: &str) -> Result<(), String> {
             p.event("step_started", &format!("Step {} started", i + 1));
             b.save()?;
         }
-        let result = git::ai::execute(
+        let output = shared.lock().map_err(|_| "Connector unavailable")?.output.clone();
+        let result = git::ai::execute_with_output(
             Path::new(&plan.repository),
             step,
             preview,
@@ -1294,6 +1301,11 @@ fn execute(shared: &Shared, id: &str) -> Result<(), String> {
                     c.outcome = outcome.map(str::to_string);
                 }
                 b.save()
+            },
+            &mut |out, err, out_cut, err_cut| {
+                if let Ok(mut store) = output.lock() {
+                    store.update(id, i, out, err, out_cut, err_cut);
+                }
             },
         );
         let mut b = shared.lock().map_err(|_| "Connector unavailable")?;

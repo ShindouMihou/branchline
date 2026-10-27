@@ -199,9 +199,11 @@ fn changed_shell_context_does_not_read_a_message_from_the_wrong_directory() {
         &[shell("cd nested && git commit -F message.txt")],
     )
     .unwrap();
-    assert!(details
-        .iter()
-        .all(|detail| detail.kind == "details_unavailable" && detail.message.is_none()));
+    assert!(details.iter().any(|detail| detail.kind == "commit.create"));
+    assert!(details.iter().all(|detail| detail.message.is_none() && detail.file_previews.is_empty()));
+    let serialized = serde_json::to_string(&details).unwrap();
+    assert!(!serialized.contains("Wrong root message"));
+    assert!(!serialized.contains("Nested message"));
     let details = inspect(
         root.path(),
         &[shell(

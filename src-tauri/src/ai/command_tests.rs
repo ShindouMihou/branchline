@@ -109,6 +109,11 @@ fn command_stdout_is_not_disclosed_by_mcp_even_with_source_access() {
     let result = super::wait::run(&broker, &credential, json!({"planId":plan["id"],"timeoutMs":0})).unwrap();
     assert!(result["plan"]["execution"][0]["result"].get("stdout").is_none());
     assert_eq!(result["pullRequestUrl"], Value::Null);
+    let native = Broker::native(&broker, Native::Status { plan_id: plan["id"].as_str().map(str::to_string) }).unwrap();
+    assert!(native["commandOutputs"][0]["stdout"].as_str().unwrap().contains("first.txt"));
+    let journal = fs::read_to_string(broker.lock().unwrap().dir.join("journal-v1.json")).unwrap();
+    assert!(!journal.contains("commandOutputs"));
+    assert!(serde_json::to_value(&done).unwrap()["execution"][0]["result"].get("stdout").is_none());
 }
 
 #[test]

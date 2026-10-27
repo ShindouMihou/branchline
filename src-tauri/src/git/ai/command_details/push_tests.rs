@@ -48,7 +48,8 @@ fn release_sequence_preserves_literal_head_when_earlier_commands_invalidate_bran
     assert_eq!(push.push_targets[0].source_ref, "HEAD");
     assert!(push.push_targets[0].source_branch.is_none());
     assert_eq!(push.push_targets[0].target_ref, "main");
-    assert_eq!(push.evidence_kind, "projected");
+    assert_eq!(push.evidence_kind, "unknown");
+    assert!(push.warnings.iter().any(|warning| warning.contains("runtime interpretation")));
 }
 
 #[test]

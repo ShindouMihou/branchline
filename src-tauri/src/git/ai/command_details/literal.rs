@@ -187,6 +187,7 @@ pub(super) fn inspect(words: &[String], index: usize, state: &mut State) -> Opti
                 detail.evidence="The requested staging command is recognized. Its file selection is not read from a different or overridden repository context.".into();
                 detail
             }
+            "stash" | "rebase" | "reset" => super::history::inspect(command, args, index, state)?,
             "push" => push::inspect(None, args, index, state),
             "switch" | "checkout" => branch_detail(command, args, index, state),
             "branch" => create_branch(args, index, state),
@@ -215,4 +216,13 @@ pub(super) fn inspect(words: &[String], index: usize, state: &mut State) -> Opti
         }
         _ => None,
     }
+}
+
+pub(super) fn normalize_arguments(words: Vec<String>) -> Vec<String> {
+    if words.first().is_some_and(|word| word == "git") {
+        if let Some((action, args, _)) = git_args(&words) {
+            return std::iter::once("git".to_string()).chain(std::iter::once(action.to_string())).chain(args.iter().cloned()).collect();
+        }
+    }
+    words
 }

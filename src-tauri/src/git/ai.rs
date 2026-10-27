@@ -432,17 +432,18 @@ pub fn preview(root: &Path, steps: &[Step]) -> Result<Preview, String> {
     );
     Ok(preview)
 }
-pub fn execute(
+pub fn execute_with_output(
     root: &Path,
     step: &Step,
     expected: &Preview,
     source_oid: &str,
     log: &mut CommandLog<'_>,
+    output: &mut commands::OutputObserver<'_>,
 ) -> Result<Value, String> {
     if let Step::Command { program, argv, stdin, timeout_seconds } = step {
-        return commands::execute(root, &commands::CommandStep {
+        return commands::execute_with_output(root, &commands::CommandStep {
             program: program.clone(), argv: argv.clone(), stdin: stdin.clone(), timeout_seconds: *timeout_seconds,
-        }, expected.command_workflow.as_ref().ok_or("Missing approved command manifest")?, log);
+        }, expected.command_workflow.as_ref().ok_or("Missing approved command manifest")?, log, output);
     }
     helpers(root)?;
     let (git_dir, common_dir) = identity(root)?;

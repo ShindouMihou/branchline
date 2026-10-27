@@ -36,7 +36,7 @@ fn blind_literal_quoting_keeps_git_and_pr_inputs_exact() {
     assert_eq!(details[1].base_branch.as_deref(), Some("main"));
 }
 #[test]
-fn blind_runtime_and_context_expressions_never_claim_literal_details() {
+fn blind_runtime_and_context_expressions_preserve_inputs_without_claiming_state() {
     let root = repository();
     for script in [
         "git commit -m \"$(printf resolved)\"",
@@ -46,12 +46,18 @@ fn blind_runtime_and_context_expressions_never_claim_literal_details() {
         "MESSAGE=x git commit -m literal",
     ] {
         let details = inspect(root.path(), &[shell(script)]).unwrap();
-        assert!(
-            details
-                .iter()
-                .all(|detail| detail.kind == "details_unavailable"),
-            "{script}"
-        );
+        assert!(details.iter().any(|detail| detail.kind == "details_unavailable"), "{script}");
+        assert!(details.iter().all(|detail| detail.files.is_none() && detail.file_previews.is_empty()), "{script}");
+        assert!(details.iter().filter(|detail| detail.kind == "commit.create").all(|detail| detail.source_branch.is_none()), "{script}");
+        if script.contains("push origin main") {
+            assert!(details.iter().any(|detail| detail.kind == "remote.push" && detail.source_branch.as_deref() == Some("main")));
+        }
+        if script.contains("$(printf resolved)") {
+            assert!(details.iter().filter(|detail| detail.kind == "commit.create").all(|detail| detail.message.is_none()));
+        }
+        if script.contains("-m literal") {
+            assert!(details.iter().any(|detail| detail.message.as_deref() == Some("literal")));
+        }
     }
 }
 #[test]

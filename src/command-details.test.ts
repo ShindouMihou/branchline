@@ -85,3 +85,23 @@ it('shows release version, target and attachments without turning assets into di
  expect(document.body.textContent).toContain('v0.4.0');expect(document.body.textContent).toContain('owner/branchline');expect(document.body.textContent).toContain('main');
  expect(document.querySelectorAll('.ai-release-assets li')).toHaveLength(2);expect(document.querySelector('[data-ai-review-changes]')).toBeNull();
 });
+it('shows stash, rebase, and reset inputs as distinct cards with runtime references left unknown',()=>{
+ const details:AiCommandDetail[]=[
+  {commandIndex:0,kind:'stash.save',title:'Save work in a stash',message:'Preserve <work>',includeUntracked:true,warnings:[],evidence:'Literal arguments'},
+  {commandIndex:0,kind:'history.rebase',title:'Rebase commits',baseRef:'32cd741b',upstreamRef:'d1018d52',warnings:[],evidence:'Literal arguments'},
+  {commandIndex:0,kind:'stash.apply',title:'Restore stashed work',operation:'apply',warnings:['The stash reference is evaluated at runtime'],evidence:'Runtime context'},
+  {commandIndex:0,kind:'history.reset',title:'Reset Git state',targetBranch:'HEAD',operation:'mixed',warnings:[],evidence:'Literal arguments'}
+ ];
+ document.body.innerHTML=commandDetails(details,0);
+ expect(document.querySelectorAll('.ai-command-detail')).toHaveLength(4);
+ expect(document.body.textContent).toContain('Tracked and untracked files');
+ expect(document.body.textContent).toContain('Preserve <work>');
+ expect(document.querySelector('work')).toBeNull();
+ expect(document.body.textContent).toContain('Replay commits after');
+ expect(document.body.textContent).toContain('d1018d52');
+ expect(document.body.textContent).toContain('Not determined before execution');
+ expect(document.body.textContent).toContain('Keep the stash');
+ expect(document.body.textContent).toContain('Kept');
+ expect(document.querySelector('[data-lucide="archive"]')).not.toBeNull();
+ expect(document.querySelector('[data-lucide="archive-restore"]')).not.toBeNull();
+});
