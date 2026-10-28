@@ -923,3 +923,15 @@ html[data-simplified="true"] .tabs { padding:0 14px; min-height:48px; }
 .ai-live-output [hidden] { display: none; }
 .ai-output-redirect { display: flex; align-items: flex-start; gap: 8px; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .ai-output-redirect svg { flex: 0 0 15px; width: 15px; height: 15px; margin-top: 2px; }
+
+.ai-modal.ai-settings-modal { width:min(640px,calc(100vw - 32px));height:auto;max-height:calc(100vh - 48px); }
+.ai-modal.ai-settings-modal>.ai-body { flex:0 1 auto;min-height:0;overflow:hidden; }
+.ai-settings-modal .ai-settings { flex:0 1 auto;min-width:0;min-height:0;padding:24px;scrollbar-gutter:auto; }
+.ai-settings-modal .ai-auto-banner { flex-shrink:0; }
+@media(max-width:600px){.ai-modal.ai-settings-modal{width:calc(100vw - 24px);max-height:calc(100vh - 24px)}.ai-settings-modal .ai-settings{padding:20px}.ai-settings-modal .ai-header{padding:12px 16px}}
+
+.ai-select-control{position:relative;display:block;min-width:0;color:var(--muted)}
+.ai-select-control:after{content:"";position:absolute;right:13px;top:calc(50% - 5px);width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg);pointer-events:none}
+.ai-settings-modal .ai-select-control select{appearance:none;-webkit-appearance:none;width:100%;color-scheme:dark;background-color:var(--panel);color:var(--text);padding-right:34px}
+.ai-settings-modal select option{background-color:var(--panel);color:var(--text)}
+.ai-settings-modal select option:checked{background-color:var(--selected);color:var(--text)}

@@ -41,7 +41,7 @@ Branchline brings both into one macOS app: a focused Git workspace inspired by f
 
 **Plan → review → approve or deny → execute → report the result.**
 
-Connect an AI client once through **AI requests → Connections**. The onboarding guide provides the MCP setup fields or commands for your client and optional skill installation. Connections work across local repositories; each request identifies its own target.
+Connect an AI client once through **AI requests → Settings**. The onboarding guide provides the MCP setup fields or commands for your client and optional skill installation. Connections work across local repositories; each request identifies its own target.
 
 An assistant can request a complete workflow, for example:
 
@@ -59,6 +59,8 @@ gh pr create \
 Branchline preserves the command as written. Recognized operations receive structured review cards; stage and commit cards can open read-only file diffs. Publishing to a primary branch or pushing between differently named branches is highlighted when detected. Runtime expressions and unsupported preview syntax remain explicit uncertainties, with the exact command available to inspect.
 
 Approval covers **the whole command**, including its shell control flow. There is no partial-approval mode, and MCP has no approval endpoint. The user makes the decision in Branchline; the AI waits and reports the actual recorded outcome.
+
+Manual review is the default. You can opt into [session-limited auto-approval](docs/AI_AUTO_APPROVAL.md) for selected actions or all requests from one connection, scoped to a chosen repository or all repositories. Review and confirm each rule in the app, and pause it at any time. Rules are not restored after quitting Branchline; broad session rules may run destructive commands and scripts.
 
 > **A permission gate, not a sandbox.** Approved commands run noninteractively as your user account and may invoke Git hooks, credential helpers, shell programs, or GitHub CLI extensions. A successful exit confirms process success, not independently verified effects. Background or deliberately detached work can outlive the shell or its timeout. Inspect state before retrying an interrupted command.
 

@@ -283,3 +283,5 @@ fn pr_edit_stdin_preview_is_bound_to_the_exact_request_without_executing_github(
     args["stdin"] = json!("Different description");
     assert!(broker.lock().unwrap().tool(&credential,"branchline_propose_command",args).unwrap_err().contains("idempotency"));
 }
+
+mod auto_approval_tests;

@@ -1,0 +1,52 @@
+.ai-preferences{display:flex;flex-direction:column;gap:12px}
+.ai-settings-group{border-top:1px solid var(--border);padding-top:12px;min-width:0}
+.ai-settings-group-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 4px}
+.ai-settings-group-heading h3{margin:0;color:var(--muted);font-size:.86em;font-weight:500;display:flex;align-items:center;gap:8px}
+.ai-settings-group-heading h3>span{font-size:.85em;color:var(--muted)}
+.ai-settings-group-heading button{min-height:28px;padding:4px 9px;font-size:.85em}
+.ai-settings-group-heading button svg{width:14px;height:14px}
+.ai-settings-connection,.ai-settings-link{display:flex;align-items:center;gap:12px;width:100%;min-width:0;min-height:44px;padding:9px 8px;text-align:left}
+.ai-settings-connection>span:nth-child(2),.ai-settings-link>span{flex:1;min-width:0}
+.ai-settings-connection strong,.ai-settings-link strong,.ai-settings-toggle strong{display:block;font-size:.92em;font-weight:500}
+.ai-settings-connection small,.ai-settings-link small,.ai-settings-toggle small{display:block;color:var(--muted);font-size:.8em;line-height:1.5;margin-top:3px}
+.ai-settings-connection strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ai-settings-connection>.ai-provider-logo{width:21px;height:21px}
+.ai-settings-connection>svg:last-child,.ai-settings-link>svg:last-child{width:15px;height:15px;color:var(--muted);flex:none}
+.ai-settings-link>svg:first-child{width:18px;height:18px;color:var(--muted);flex:none}
+.ai-settings-toggle{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:42px;padding:9px 8px;cursor:pointer}
+.ai-settings-toggle>span:not(.ai-switch){flex:1;min-width:0}
+.ai-settings-toggle .ai-switch{flex:none}
+.ai-settings-group>.ai-settings-toggle{padding-left:38px}
+.ai-settings-guides{padding-top:12px}
+.ai-settings-empty{margin:12px 8px;color:var(--muted);font-size:.9em;line-height:1.6}
+.ai-connection-identity{display:flex;align-items:center;gap:12px;min-width:0;padding:4px 8px}
+.ai-connection-identity>.ai-provider-logo{width:28px;height:28px}
+.ai-connection-identity>div{min-width:0}
+.ai-connection-identity h3{margin:0;font-size:1.05em;font-weight:550;overflow-wrap:anywhere}
+.ai-connection-identity p{margin:5px 0 0;font-size:.85em;color:var(--muted)}
+.ai-settings-select{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:9px 8px;font-size:.92em}
+.ai-settings-select>.ai-select-control{width:200px;max-width:55%;min-width:0}.ai-settings-select select{width:100%;min-width:0;padding:6px 32px 6px 8px}
+.ai-settings-group[aria-label="Connection preferences"]>.ai-settings-toggle{padding-left:8px}
+.ai-settings-disconnect{border-top:1px solid var(--border);padding:12px 0 0}
+.ai-settings-disconnect p{font-size:.9em;line-height:1.6;color:var(--muted);margin:8px 0 14px}
+.ai-settings-disconnect [role=group]>div{display:flex;gap:8px;justify-content:flex-end}
+
+.ai-modal.ai-settings-modal .ai-preferences{padding:20px}
+
+.ai-settings-toggle{justify-content:initial;gap:12px}
+.ai-settings-select>span{display:flex;align-items:center;gap:12px}
+.ai-connection-identity>div:not(.ai-connection-actions){flex:1;min-width:0}
+.ai-connection-actions{position:relative;flex:none}
+.ai-connection-actions>button{color:var(--muted)}
+.ai-connection-menu{position:absolute;right:0;top:calc(100% + 6px);z-index:2;min-width:170px;background:var(--raised);border:1px solid var(--border);border-radius:8px;padding:4px;box-shadow:0 8px 24px #0004}
+.ai-connection-menu button{width:100%;justify-content:flex-start;padding:8px 10px;font-size:.9em}
+.ai-connection-menu svg{width:16px;height:16px;color:var(--muted)}
+
+.ai-connection-setup{display:flex;align-items:center;justify-content:space-between;gap:16px;width:100%;text-align:left;border-top:1px solid var(--border);padding:14px 8px;margin-top:0}
+.ai-connection-setup>span:first-child{flex:1;min-width:0}
+.ai-connection-setup strong{display:block;font-size:.92em;font-weight:500}
+.ai-connection-setup small{display:block;color:var(--muted);font-size:.8em;line-height:1.5;margin-top:5px}
+.ai-connection-setup-action{display:inline-flex;align-items:center;gap:8px;flex:none;font-size:.85em;color:var(--muted)}
+.ai-connection-setup-action svg{width:14px;height:14px}
+.ai-connection-setup:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media(max-width:440px){.ai-connection-setup-action{font-size:0}.ai-connection-setup-action svg{width:16px;height:16px}}

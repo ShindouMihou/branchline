@@ -1,5 +1,15 @@
 # Product backlog
 
+## Optional AI auto-approval
+
+Implemented locally at the user's request on 2026-10-28. See [approval settings and policy behavior](AI_AUTO_APPROVAL.md). Manual approval remains the default.
+
+- [x] Native opt-in settings for selected operations or all requests during the current broker session.
+- [x] Connection/repository scope, visible expiry, pause and revocation across windows.
+- [x] Conservative whole-command authorization classification, separate from explanatory previews.
+- [x] Shared broker authorization with existing stale-preview checks and exactly-once execution.
+- [x] Policy-attributed activity receipts, MCP guidance and regression coverage.
+
 ## Stash workspace
 
 Started at the user's request on 2026-10-27; core stash management implemented locally on 2026-10-28. This is a main Git workspace feature, separate from structured stash previews in AI approvals.

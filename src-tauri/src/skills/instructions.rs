@@ -2,7 +2,7 @@ use super::{hash, instruction_files as files, safe_path, Installer};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::{fs, path::PathBuf};
-pub(super) const REVISION: u64 = 3;
+pub(super) const REVISION: u64 = 4;
 const TEMPLATE: &str = include_str!("../../../resources/branchline-integration.md");
 pub(super) struct Location {
     pub(super) id: &'static str,

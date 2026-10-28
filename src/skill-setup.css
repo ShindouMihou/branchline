@@ -1,0 +1,26 @@
+.modal.skills-modal{width:min(560px,calc(100vw - 32px));height:auto;max-height:calc(100dvh - 48px);display:flex;flex-direction:column;overflow:hidden}
+.modal.skills-modal>header{padding:16px 20px;gap:10px;flex:none}
+.modal.skills-modal .skills-heading-icon{background:transparent;color:var(--accent);width:20px;height:24px}
+.modal.skills-modal .skills-body{min-height:0;overflow:auto;padding:18px 20px 20px}
+.skills-coverage{margin:0 0 14px;font-size:.88em;font-weight:400;line-height:1.5;color:var(--muted)}
+.skills-coverage small{display:block;font-size:.88em;font-weight:400;line-height:1.6;color:var(--muted);margin-top:4px}
+.skills-install-list{border-block:1px solid var(--border)}
+.skills-install-row{display:flex;align-items:center;gap:12px;padding:16px 0}
+.skills-install-row+.skills-install-row{border-top:1px solid var(--border)}
+.skills-install-row>svg{width:18px;height:18px;color:var(--accent);flex:none}
+.skills-install-copy{flex:1;min-width:0}
+.skills-install-copy strong{display:block;font-size:.92em;font-weight:500}
+.skills-install-copy p{font-size:.8em;line-height:1.5;color:var(--muted);margin:4px 0 0}
+.skills-install-copy small{display:block;color:var(--muted);font-size:.75em;line-height:1.5;margin-top:4px}
+.skills-installed,.skills-unavailable{flex:none;font-size:.78em;color:var(--muted);display:inline-flex;align-items:center;gap:5px}
+.skills-installed{padding:4px 8px;border:1px solid color-mix(in srgb,var(--accent) 20%,transparent);border-radius:999px;background:color-mix(in srgb,var(--accent) 8%,transparent);color:var(--accent);font-weight:500;white-space:nowrap}
+.skills-installed svg{color:currentColor;width:12px;height:12px}
+.skills-install-row>button{flex:none;font-size:.8em;min-height:30px;padding:5px 10px}
+.modal.skills-modal .skill-preview{padding-top:14px;margin:0}
+.modal.skills-modal .skill-preview summary{font-size:.85em;min-height:30px}
+.modal.skills-modal .skill-scope{color:var(--muted);font-size:.75em;line-height:1.5;margin:12px 0 0;gap:7px}
+.modal.skills-modal .skill-scope svg{width:13px;height:13px}
+.skills-success{font-size:.82em;color:var(--muted);line-height:1.5;margin:0 0 12px}
+.skill-reminder-detail{padding:12px 0;border-top:1px solid var(--border)}
+.skill-location small{display:block;color:var(--muted);line-height:1.5;margin-top:4px}
+@media(max-width:480px){.skills-install-row{flex-wrap:wrap}.skills-install-copy{flex-basis:calc(100% - 34px)}.skills-installed,.skills-unavailable,.skills-install-row>button{margin-left:30px}}

@@ -4,6 +4,8 @@ mod history;
 mod history_tests;
 mod literal;
 mod shell;
+mod policy_shell;
+pub(crate) fn policy_commands(script: &str) -> Option<Vec<Vec<String>>> { policy_shell::commands(script) }
 mod staging;
 mod types;
 mod message_file;
@@ -17,7 +19,7 @@ use std::path::Path;
 use std::fs;
 pub use types::{Detail, FileSelection, FileSource};
 
-fn read_git(root: &Path, args: &[&str]) -> Option<String> {
+pub(crate) fn read_git(root: &Path, args: &[&str]) -> Option<String> {
     let (code, out, _) = super::super::git(root, args, None).ok()?;
     (code == 0).then(|| String::from_utf8(out).ok()).flatten()
 }

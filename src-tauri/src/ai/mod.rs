@@ -4,6 +4,7 @@ mod wait;
 mod review_signals;
 mod preview_changes;
 mod output;
+mod auto_approval;
 use crate::git::{
     self,
     ai::{Preview, Step},
@@ -183,6 +184,8 @@ pub struct Approval {
     pub authority: String,
     #[serde(default)]
     pub acknowledged_risks: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub policy: Option<auto_approval::GrantRecord>,
 }
 #[derive(Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -248,11 +251,17 @@ pub struct Broker {
     notifier: Option<Arc<dyn Fn(&str) + Send + Sync>>,
     focus_plan: Option<String>,
     output: Arc<Mutex<output::OutputStore>>,
+    auto_approval: auto_approval::Store,
+    auto_candidates: std::collections::HashSet<String>,
 }
 pub type Shared = Arc<Mutex<Broker>>;
 #[derive(Deserialize)]
 #[serde(tag = "op", rename_all = "snake_case", deny_unknown_fields)]
 pub enum Native {
+    AutoApprovalPreview { request: auto_approval::GrantRequest },
+    AutoApprovalGrant { request: auto_approval::GrantRequest },
+    AutoApprovalPause,
+    AutoApprovalRemove { id: String },
     Status {
         plan_id: Option<String>,
     },
@@ -431,6 +440,8 @@ impl Broker {
             notifier: None,
             focus_plan: None,
             output: Arc::new(Mutex::new(output::OutputStore::default())),
+            auto_approval: auto_approval::Store::default(),
+            auto_candidates: Default::default(),
         }));
         broker.lock().map_err(|_| "Connector unavailable")?.save()?;
         let shared = broker.clone();
@@ -508,7 +519,7 @@ impl Broker {
     fn native_status(&self, selected: Option<&str>) -> Value {
         let clients=self.journal.clients.iter().map(|c|json!({"id":c.id,"name":c.name,"repositories":c.repositories,"readSource":c.read_source,"provider":c.provider,"active":c.active,"createdAt":c.created_at})).collect::<Vec<_>>();
         let command_outputs = self.output.lock().ok().and_then(|store| selected.map(|id| serde_json::to_value(store.snapshots(id)).unwrap_or(json!([])))).unwrap_or(json!([]));
-        json!({"commandOutputs":command_outputs,"schemaVersion":SCHEMA,"enabled":self.journal.enabled,"autoOpen":self.journal.auto_open,"notifications":self.journal.notifications,"focusPlanId":self.focus_plan,"clients":clients,"plans":self.journal.plans.iter().rev().map(|p|{let mut v=Self::redacted(p,false); if selected!=Some(p.id.as_str()){v["preview"]=Value::Null; v["execution"]=json!([]);v["events"]=json!([]);} v}).collect::<Vec<_>>(),"selectedPlan":selected.and_then(|id|self.journal.plans.iter().find(|p|p.id==id)),"pending":self.journal.plans.iter().filter(|p|p.status=="pending_review").count()})
+        json!({"autoApproval":self.auto_approval.status(),"commandOutputs":command_outputs,"schemaVersion":SCHEMA,"enabled":self.journal.enabled,"autoOpen":self.journal.auto_open,"notifications":self.journal.notifications,"focusPlanId":self.focus_plan,"clients":clients,"plans":self.journal.plans.iter().rev().map(|p|{let mut v=Self::redacted(p,false); if selected!=Some(p.id.as_str()){v["preview"]=Value::Null; v["execution"]=json!([]);v["events"]=json!([]);} v}).collect::<Vec<_>>(),"selectedPlan":selected.and_then(|id|self.journal.plans.iter().find(|p|p.id==id)),"pending":self.journal.plans.iter().filter(|p|p.status=="pending_review").count()})
     }
     pub fn set_notifier(&mut self, notify: Arc<dyn Fn(&str) + Send + Sync>) {
         self.notifier = Some(notify)
@@ -524,8 +535,27 @@ impl Broker {
         )
     }
     pub fn native(shared: &Shared, request: Native) -> Result<Value, String> {
+        Self::native_authorized(shared, request, None)
+    }
+    fn native_authorized(shared: &Shared, request: Native, policy: Option<auto_approval::GrantRecord>) -> Result<Value, String> {
         let mut b = shared.lock().map_err(|_| "Connector unavailable")?;
         match request {
+            Native::AutoApprovalPreview { request } => {
+                if !b.journal.enabled || !b.journal.clients.iter().any(|c| c.id == request.client_id && c.active) {
+                    return Err("Enable the connector and choose an active connection first.".into());
+                }
+                return auto_approval::Store::preview(request, &b.journal.plans);
+            }
+            Native::AutoApprovalGrant { request } => {
+                if !b.journal.enabled || !b.journal.clients.iter().any(|c| c.id == request.client_id && c.active) {
+                    return Err("Enable the connector and choose an active connection first.".into());
+                }
+                let plans = b.journal.plans.clone();
+                b.auto_approval.add(request, &plans)?;
+                return Ok(b.native_status(None));
+            }
+            Native::AutoApprovalPause => { b.auto_approval.clear(); return Ok(b.native_status(None)); }
+            Native::AutoApprovalRemove { id } => { b.auto_approval.revoke(&id); return Ok(b.native_status(None)); }
             Native::Status { plan_id } => return Ok(b.native_status(plan_id.as_deref())),
             Native::ClearActivity { confirmed } => {
                 if !confirmed {
@@ -669,6 +699,7 @@ impl Broker {
             Native::Enable { enabled } => {
                 b.journal.enabled = enabled;
                 if !enabled {
+                    b.auto_approval.clear();
                     for p in &mut b.journal.plans {
                         if ["approved", "running", "pending_review", "ready"]
                             .contains(&p.status.as_str())
@@ -743,6 +774,7 @@ impl Broker {
                 return b.configuration(&id);
             }
             Native::Revoke { client_id } => {
+                b.auto_approval.revoke(&client_id);
                 let c = b
                     .journal
                     .clients
@@ -823,6 +855,11 @@ impl Broker {
                 {
                     return Err("This request changed or is no longer waiting for approval.".into());
                 }
+                if let Some(grant) = &policy {
+                    if !b.auto_approval.active(grant, &p) {
+                        return Err("Automatic approval was paused, expired or no longer matches. Review this request manually.".into());
+                    }
+                }
                 let reviewed = p.preview.as_ref().ok_or("No verifiable preview")?;
                 let exact_commands = reviewed.command_workflow.is_some();
                 let binary = reviewed.warnings.iter().any(|w| w.starts_with("Binary"));
@@ -872,7 +909,8 @@ impl Broker {
                     expires_at: now() + 600,
                     through,
                     digest,
-                    authority: "native_user".into(),
+                    authority: if policy.is_some() { "native_policy" } else { "native_user" }.into(),
+                    policy: policy.clone(),
                     acknowledged_risks,
                 });
                 p.status = "approved".into();
@@ -881,7 +919,7 @@ impl Broker {
                 }
                 p.event(
                     "approved",
-                    &format!("Native user approved the first {through} step(s)."),
+                    &policy.as_ref().map(|g| format!("Automatically approved the entire request under native rule {} (revision {}).", g.id, g.revision)).unwrap_or_else(|| format!("Native user approved the entire request ({through} step(s)).")),
                 );
                 b.save()?;
                 drop(b);
@@ -1027,7 +1065,7 @@ impl Broker {
                 Ok(catalog)
             }
             "branchline_capabilities" => Ok(
-                json!({"schemaVersion":SCHEMA,"operations":["command.execute"],"scope":"git_github_workflows_only","proposalTool":"branchline_propose_command","commandExecution":{"shell":"/bin/sh","preservesCommand":true,"approval":"whole_request_only","effectsVerified":false,"interactive":false,"timeoutSeconds":{"default":120,"maximum":600},"maximumCommandBytes":131070,"maximumRequestBytes":1048576,"output":"withheld; captured byte counts and digests only"},"catalogTool":"branchline_command_catalog","waitTool":"branchline_wait_for_result","waitTimeoutMs":{"default":20000,"maximum":25000},"timeoutIsApproval":false,"approval":"Only the native user can approve the whole unchanged command, deny, or deny with a reason.","explanationGuidance":"Apply only to consequential Git/GitHub effects. Unrelated services use normal tools and permissions; Branchline is not a general approval fallback. Explain the outcome, reason, targets and uncertainty in everyday language. Supply explicit commit message and PR title/body/head/base. Structured review details never rewrite the command or prove all effects."}),
+                json!({"schemaVersion":SCHEMA,"operations":["command.execute"],"scope":"git_github_workflows_only","proposalTool":"branchline_propose_command","commandExecution":{"shell":"/bin/sh","preservesCommand":true,"approval":"whole_request_only","effectsVerified":false,"interactive":false,"timeoutSeconds":{"default":120,"maximum":600},"maximumCommandBytes":131070,"maximumRequestBytes":1048576,"output":"withheld; captured byte counts and digests only"},"catalogTool":"branchline_command_catalog","waitTool":"branchline_wait_for_result","waitTimeoutMs":{"default":20000,"maximum":25000},"timeoutIsApproval":false,"approval":"Manual review by default. Native users may enable connection/repository-scoped, session-limited automatic approval rules. MCP cannot configure rules. Always request review and wait for actual results.","autoApproval":{"available":true,"default":"manual","configuration":"native_only","duration":"broker_session_or_shorter","wholeRequestOnly":true},"explanationGuidance":"Apply only to consequential Git/GitHub effects. Unrelated services use normal tools and permissions; Branchline is not a general approval fallback. Explain the outcome, reason, targets and uncertainty in everyday language. Supply explicit commit message and PR title/body/head/base. Structured review details never rewrite the command or prove all effects."}),
             ),
             "branchline_inspect" => {
                 let query = args
@@ -1210,7 +1248,12 @@ impl Broker {
                     }
                 }
                 let content = client.read_source;
+                let candidate = p.clone();
                 let result = Self::redacted(p, content);
+                if notify && self.auto_approval.matching(&candidate).is_some() {
+                    self.auto_candidates.insert(id.to_string());
+                    notify = false;
+                }
                 if name != "branchline_get_plan" {
                     self.save()?;
                 }
@@ -1237,10 +1280,21 @@ fn execute(shared: &Shared, id: &str) -> Result<(), String> {
     let _operation = gate.lock().map_err(|_| "Execution queue unavailable")?;
     let plan = {
         let mut b = shared.lock().map_err(|_| "Connector unavailable")?;
-        let p = b.plan_mut(id)?;
-        if p.status != "approved" {
-            return Err("Approval is no longer active".into());
+        let candidate = b.journal.plans.iter().find(|p| p.id == id).ok_or("Request not found")?.clone();
+        if candidate.status != "approved" { return Err("Approval is no longer active".into()); }
+        if candidate.approval.as_ref().and_then(|a| a.policy.as_ref()).is_some_and(|grant| !b.auto_approval.active(grant, &candidate)) {
+            let p = b.plan_mut(id)?;
+            p.status = "pending_review".into();
+            p.approval = None;
+            p.issue = Some("Automatic approval ended before execution. Review this request manually.".into());
+            for step in &mut p.execution { step.status = "not_approved".into(); }
+            p.event("auto_approval_stopped", "The automatic approval rule is no longer active. No commands started.");
+            b.focus_plan = b.journal.auto_open.then(|| id.to_string());
+            b.save()?;
+            if let Some(notify) = &b.notifier { notify(id); }
+            return Ok(());
         }
+        let p = b.plan_mut(id)?;
         p.status = "running".into();
         p.event("started", "Execution started under native approval.");
         let p = p.clone();
@@ -1259,8 +1313,9 @@ fn execute(shared: &Shared, id: &str) -> Result<(), String> {
                 .clients
                 .iter()
                 .any(|c| c.id == plan.client_id && c.active);
+            let policy_active = approval.policy.as_ref().is_none_or(|g| b.auto_approval.active(g, &plan));
             let p = b.plan_mut(id)?;
-            if !enabled || !client_active || p.cancel_requested || now() > approval.expires_at {
+            if !policy_active || !enabled || !client_active || p.cancel_requested || now() > approval.expires_at {
                 p.status = "cancelled".into();
                 p.event("stopped", "Remaining actions stopped at a step boundary.");
                 b.save()?;
@@ -1278,9 +1333,10 @@ fn execute(shared: &Shared, id: &str) -> Result<(), String> {
             &source,
             &mut |program, argv, input, finished, outcome| {
                 let mut b = shared.lock().map_err(|_| "Connector unavailable")?;
+                let policy_active = approval.policy.as_ref().is_none_or(|g| b.auto_approval.active(g, &plan));
                 let p = b.plan_mut(id)?;
                 if !finished {
-                    if p.cancel_requested {
+                    if !policy_active || p.cancel_requested {
                         return Err("Stopped before the next Git command; inspect completed actions before retrying.".into());
                     }
                     p.execution[i].commands.push(Command {
@@ -1412,7 +1468,15 @@ fn serve(mut stream: UnixStream, shared: Shared) -> Result<(), String> {
             return wait::run(&shared, &credential, v["arguments"].clone());
         }
         let mut b = shared.lock().map_err(|_| "Connector unavailable")?;
-        b.tool(&credential, name, v["arguments"].clone())
+        let result = b.tool(&credential, name, v["arguments"].clone())?;
+        drop(b);
+        if name == "branchline_request_review" {
+            if let Some(id) = v["arguments"]["planId"].as_str() {
+                auto_approval::dispatch(&shared, id);
+                return shared.lock().map_err(|_| "Connector unavailable")?.tool(&credential, "branchline_get_plan", json!({"planId":id}));
+            }
+        }
+        Ok(result)
     })();
     let result = match result {
         Ok(v) => json!({"result":v}),
